@@ -1,0 +1,113 @@
+--Tạo bảng dữ liệu tên là : quan_ly_sinh_vien
+--Tạo ra các bảng sau
+--- Bảng sinh viên gồm các thuộc tính : rollno, fullname, age, address, email, phoneNumber, gender -> Trường khóa chính rollno   - Bảng môn học : mã môn học, tên môn học -> Trường khóa chính mã môn học tự tăng
+--- Bảng điểm gồm các thuộc tinh sau : điểm, rollNo, mã môn học -> Trường khóa chính rollno, mã môn học
+--- Bảng lớp học : mã lớp học, tên lớp học -> Trường khóa chính mã lớp học tự tăng
+--- Bảng phòng học : tên phòng học, mã phòng học,  sỗ bàn học, số ghế học,  địa chỉ lớp học -> Trường khóa chính mã phòng học tự tăng
+--Thực hiện thêm dữ liệu vào từng bảng, mỗi bảng thêm tối thiểu 5 bản ghi.
+--Yêu cầu:
+--- Hiển thị dữ liệu trong các bảng
+
+create table bangsinhvien (
+rollno nvarchar(20) primary key,
+fullname nvarchar(20),
+age bigint,
+address nvarchar(20),
+email nvarchar(20),
+phonenumber bigint,
+gender nvarchar(20),
+)
+create table bangmonhoc (
+mamonhoc int  primary key identity (1,1),
+tenmonhoc  nvarchar (20),
+
+)
+create table bangdiem(
+diem int,
+rollno nvarchar(20),
+mamonhoc int,
+primary key (rollno, mamonhoc)
+)
+create table banglophoc (
+malophoc int primary key identity (1,1),
+tenlophoc nvarchar (20),
+)
+
+create table bangphonghoc (
+tenphonghoc nvarchar (20),
+maphonghoc int primary key identity (1,1),
+sobanhoc int,
+soghehoc int,
+diachilophoc nvarchar (20),
+)
+drop table bangdiem;
+drop table bangphonghoc;
+drop table banglophoc;
+drop table bangmonhoc;
+drop table bangsinhvien;
+
+insert into bangsinhvien (rollno, fullname, age, address, email, phonenumber, gender)
+values
+('SV001', N'Nguyễn Văn A', 20, N'Hà Nội', 'a@gmail.com', '0912345678', N'Nam'),
+('SV002', N'Trần Thị B', 21, N'Hải Phòng', 'b@gmail.com', '0923456789', N'Nữ'),
+('SV003', N'Lê Văn C', 22, N'Đà Nẵng', 'c@gmail.com', '0934567890', N'Nam'),
+('SV004', N'Phạm Thị D', 20, N'Hà Nội', 'd@gmail.com', '0945678901', N'Nữ'),
+('SV005', N'Hoàng Văn E', 23, N'HCM', 'e@gmail.com', '0956789012', N'Nam');
+insert into bangmonhoc (tenmonhoc)
+values
+(N'Toán cao cấp'),
+(N'Lập trình C'),
+(N'Cơ sở dữ liệu'),
+(N'Tiếng Anh chuyên ngành'),
+(N'Mạng máy tính');
+insert into banglophoc (tenlophoc)
+values
+(N'Công nghệ thông tin K1'),
+(N'Công nghệ thông tin K2'),
+(N'Kinh tế K1'),
+(N'Kinh tế K2'),
+(N'Ngôn ngữ Anh K1');
+insert into bangphonghoc (tenphonghoc, sobanhoc, soghehoc, diachilophoc)
+values
+(N'Phòng A1', 10, 20, N'Cơ sở 1 - Hà Nội'),
+(N'Phòng A2', 15, 30, N'Cơ sở 1 - Hà Nội'),
+(N'Phòng B1', 8, 16, N'Cơ sở 2 - HCM'),
+(N'Phòng B2', 12, 25, N'Cơ sở 2 - HCM'),
+(N'Phòng C1', 20, 40, N'Cơ sở 3 - Đà Nẵng');
+insert into bangdiem (rollno, mamonhoc, diem)
+values
+('SV001', 1, 8.5),
+('SV001', 2, 7.0),
+('SV002', 1, 6.5),
+('SV002', 3, 9.0),
+('SV003', 4, 7.5),
+('SV004', 2, 8.0),
+('SV004', 5, 9.5),
+('SV005', 3, 6.0),
+('SV005', 4, 8.5),
+('SV005', 5, 7.0);
+select * from bangsinhvien;
+
+
+select * from bangmonhoc;
+
+
+select * from banglophoc;
+
+
+select * from bangphonghoc;
+
+
+select * from bangdiem;
+alter table bangmonhoc alter column tenmonhoc nvarchar(100);
+alter table banglophoc alter column tenlophoc nvarchar(100);
+alter table bangphonghoc alter column diachilophoc nvarchar(200);
+alter table bangsinhvien alter column fullname nvarchar(100);
+--- Hiển thị phòng học có số bàn > 5 và số ghế > 5   
+select * from bangphonghoc 
+where sobanhoc >5 and soghehoc >5
+--- Hiển thị phòng học có số bàn > 5 và < 20 + số ghế > 5 và < 20
+select * from bangphonghoc 
+where sobanhoc >5 and sobanhoc <20 and soghehoc >5 and soghehoc <20
+
+
