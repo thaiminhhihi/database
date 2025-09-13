@@ -1,0 +1,84 @@
+create table Sanpham (
+MaSP int primary key identity (1,1),
+TenSP NVARCHAR(100) not null,
+LoaiSP NVARCHAR(50),
+Gia DECIMAL(18,2) CHECK (Gia >= 0),
+SoLuong INT DEFAULT 0,
+NgayTao DATE DEFAULT GETDATE(),
+)
+select * from Sanpham
+--2. Chỉnh sửa bảng
+
+--Thêm cột MoTa kiểu NVARCHAR(255) cho bảng SanPham.
+
+--Đổi tên cột LoaiSP thành DanhMuc.
+alter table Sanpham add Mota nvarchar(255);
+alter table Sanpham add Danhmuc NVARCHAR(50);
+update Sanpham set Danhmuc = LoaiSP;
+ALTER TABLE SanPham DROP COLUMN LoaiSP;
+--3. Thêm dữ liệu
+
+--Thêm ít nhất 5 sản phẩm mẫu vào bảng, ví dụ:
+
+--TenSP	DanhMuc	Gia	SoLuong	MoTa
+--Laptop Dell	Laptop	15000000	10	Máy tính xách tay
+--iPhone 15	Điện thoại	25000000	5	Điện thoại Apple mới
+--Chuột Logitech	Phụ kiện	500000	50	Chuột không dây
+--Bàn phím cơ	Phụ kiện	1200000	20	Bàn phím gaming
+--Tủ lạnh LG	Gia dụng	8000000	7	Tủ lạnh tiết kiệm điện
+insert into Sanpham (TenSP, Danhmuc, Gia, SoLuong,Mota)
+values
+(N'Laptop Dell',    N'Laptop',     1000, 500010, N'Máy tính xách tay'),
+(N'iPhone 15',      N'Điện thoại', 25000000, 5,  N'Điện thoại Apple mới'),
+(N'Chuột Logitech', N'Phụ kiện',   500000,   50, N'Chuột không dây'),
+(N'Bàn phím cơ',    N'Phụ kiện',   1200000,  20, N'Bàn phím gaming'),
+(N'Tủ lạnh LG',     N'Gia dụng',   8000000,  7,  N'Tủ lạnh tiết kiệm điện');
+--4. Truy vấn dữ liệu (SELECT)
+
+--Viết các câu lệnh truy vấn:
+
+--Liệt kê toàn bộ sản phẩm trong bảng.
+
+--Hiển thị danh sách sản phẩm thuộc danh mục Phụ kiện.
+
+--Tìm sản phẩm có giá lớn hơn 10,000,000.
+
+--Hiển thị sản phẩm có số lượng tồn kho ít hơn 10.
+
+--Tìm sản phẩm có tên chứa từ khóa "Dell".
+select * from Sanpham
+where Danhmuc = N'Phụ kiện'
+
+select * from Sanpham
+where Gia > 10000000
+
+select * from Sanpham
+where Soluong <10
+
+select * from Sanpham
+where TenSP like '%Dell%'
+
+
+
+
+--5. Cập nhật dữ liệu (UPDATE)
+
+--Cập nhật giá của sản phẩm Laptop Dell thành 16,000,000.
+
+--Tăng số lượng tồn kho của sản phẩm iPhone 15 thêm 3.
+
+update Sanpham 
+Set Gia = 16000000
+where TenSP = N'Laptop Dell'
+
+update Sanpham
+set Soluong = 100
+where MaSP = 4
+--6. Xóa dữ liệu (DELETE)
+
+--Xóa sản phẩm có tên Chuột Logitech.
+delete Sanpham 
+where maSP =3
+--Xóa tất cả sản phẩm thuộc danh mục Gia dụng.
+delete Sanpham 
+where Danhmuc =N'Gia dụng'
