@@ -1,0 +1,185 @@
+--1. Tạo cơ sở dữ liệu quản lý nhà trọ gồm các bảng sau
+--Chủ trọ (landlords):  
+--id: khóa chính tự tăng
+--fullname: nvarchar(50) not null
+--address: nvarchar(200)
+
+create table landlords (
+id int primary key identity (1,1),
+fullname nvarchar(50) not null,
+address nvarchar(200)
+)
+--Phòng trọ (rooms):
+--id: khóa chính tự tăng
+--landlord_id: chủ trọ (liên kết với bảng landlords)
+--room_number: nvarchar(20) not null
+--price: float
+create table rooms (
+id int primary key identity (1,1),
+landlord_id int foreign key references landlords(id),
+room_number nvarchar(20) not null,
+price float )
+
+--Khách thuê (tenants):
+--id: khóa chính tự tăng
+--fullname: nvarchar(50) not null
+--phone: nvarchar(20)
+--email: nvarchar(150)
+CREATE TABLE tenants (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    fullname NVARCHAR(50) NOT NULL,
+    phone NVARCHAR(20),
+    email NVARCHAR(150) )
+alter table landlords add phone nvarchar(20)
+
+select * from landlords
+select * from rooms
+select * from tenants
+select * from contracts
+--Hợp đồng thuê (contracts):
+--id: khóa chính tự tăng
+--tenant_id: khách thuê (liên kết với bảng tenants)
+--room_id: phòng thuê (liên kết với bảng rooms)
+--start_date: datetime
+--end_date: datetime
+create table contracts (
+id int primary key identity (1,1),
+tenant_id int foreign key references tenants(id),
+room_id int foreign key references rooms(id),
+start_date datetime,
+end_date datetime)
+--Dữ liệu mẫu cần thêm
+INSERT INTO landlords (fullname, phone, address)
+VALUES 
+(N'Nguyễn Văn A',N'Hà Nội','0911111111'),
+(N'Trần Văn B',N'Nam Định','0922222222'),
+(N'Lê Thị C',N'Thái Bình','0933333333');
+
+-- Phòng trọ
+INSERT INTO rooms (room_number, price, landlord_id)
+VALUES
+(N'Phòng 101',1500000,1),
+(N'Phòng 102',1800000,1),
+(N'Phòng 201',2000000,2),
+(N'Phòng 301',2500000,3);
+
+-- Khách thuê
+INSERT INTO tenants (fullname, phone, email)
+VALUES
+(N'Phạm Văn D','0988888888','d@gmail.com'),
+(N'Nguyễn Văn E','0977777777','e@gmail.com'),
+(N'Trần Thị F','0966666666','f@gmail.com');
+
+-- Hợp đồng thuê
+INSERT INTO contracts (tenant_id, room_id, start_date, end_date)
+VALUES
+(1,1,'2025-01-01','2025-12-31'),
+(2,2,'2025-03-01','2025-09-01'),
+(3,3,'2025-05-15','2025-11-15');
+--Chủ trọ (landlords):
+--Nguyễn Văn A, 0911111111, Hà Nội
+--Trần Văn B, 0922222222, Nam Định
+--Lê Thị C, 0933333333, Thái Bình
+
+--Phòng trọ (rooms):
+--Phòng 101, giá 1.500.000, thuộc chủ trọ id = 1
+--Phòng 102, giá 1.800.000, thuộc chủ trọ id = 1
+--Phòng 201, giá 2.000.000, thuộc chủ trọ id = 2
+--Phòng 301, giá 2.500.000, thuộc chủ trọ id = 3
+
+--Khách thuê (tenants):
+--Phạm Văn D, 0988888888, d@gmail.com
+--Nguyễn Văn E, 0977777777, e@gmail.com
+--Trần Thị F, 0966666666, f@gmail.com
+
+--Hợp đồng thuê (contracts):
+--Khách id = 1 thuê phòng id = 1, từ 2025-01-01 đến 2025-12-31
+--Khách id = 2 thuê phòng id = 2, từ 2025-03-01 đến 2025-09-01
+--Khách id = 3 thuê phòng id = 3, từ 2025-05-15 đến 2025-11-15\
+
+--Các yêu cầu:
+--YÊU CẦU 1:
+--Lấy danh sách tất cả khách thuê và thông tin hợp đồng (nếu có).
+--Format:
+--tenant_id, fullname, phone, email, contract_id, room_id, start_date, end_date
+--👉 Gợi ý: sử dụng LEFT JOIN
+SELECT 
+    t.id AS tenant_id,
+    t.fullname,
+    t.phone,
+    t.email,
+    c.id AS contract_id,
+    c.room_id,
+    c.start_date,
+    c.end_date
+FROM tenants t
+LEFT JOIN contracts c ON t.id = c.tenant_id;
+select * from landlords
+select * from rooms
+select * from tenants
+select * from contracts
+--YÊU CẦU 2:
+--Lấy danh sách tất cả hợp đồng cùng thông tin khách thuê.
+--Format:
+--contract_id, tenant_name, tenant_phone, room_number, start_date, end_date
+--👉 Gợi ý: sử dụng INNER JOIN
+select 
+c.id,
+t.fullname,
+t.phone,
+r.room_number,
+c.start_date,
+c.end_date
+from contracts c
+inner join tenants t on c.tenant_id = t.id
+inner join rooms r on c.room_id = r.id
+
+
+
+--YÊU CẦU 3:
+--Lấy tất cả phòng trọ và thông tin chủ trọ kèm theo.
+--Format:
+--room_id, room_number, price, landlord_name, landlord_phone
+--👉 Gợi ý: sử dụng JOIN
+select 
+r.id as room_id,
+r.room_number, 
+r.price ,
+l.fullname,
+l.phone
+from rooms r
+join landlords l on l.id = r.landlord_id
+select * from landlords
+select * from rooms
+select * from tenants
+select * from contracts
+--YÊU CẦU 4:
+--Lấy danh sách khách thuê chưa có hợp đồng.
+--👉 Gợi ý: sử dụng LEFT JOIN + WHERE contract_id IS NULL
+SELECT 
+    t.id AS tenant_id,
+    t.fullname,
+    t.phone,
+    t.email,
+    c.id
+FROM tenants t
+LEFT JOIN contracts c ON t.id = c.tenant_id
+WHERE c.id IS NULL;
+
+--YÊU CẦU 5:
+--Lấy danh sách chủ trọ và tất cả phòng trọ (kể cả khi chưa có phòng nào được thêm).
+--👉 Gợi ý: sử dụng FULL OUTER JOIN
+select 
+l.id,
+l.fullname,
+l.address,
+l.phone,
+r.id,
+r.landlord_id,
+r.room_number,
+r.price
+from landlords l
+full outer join rooms r on l.id = r.landlord_id
+--YÊU CẦU 6:
+--Hiển thị danh sách khách thuê sắp xếp theo tên (fullname) tăng dần và theo id giảm dần.
+select * from tenants order by fullname asc , id desc
