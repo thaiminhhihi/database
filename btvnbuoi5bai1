@@ -1,0 +1,127 @@
+--Giả sử cơ sở dữ liệu quản lý học sinh có các bảng sau:
+
+--students(id, fullname, address, class_id)
+DROP TABLE IF EXISTS scores;
+DROP TABLE IF EXISTS students;
+DROP TABLE IF EXISTS subjects;
+DROP TABLE IF EXISTS classes;
+--classes(id, classname)
+create table classes (
+id int primary key ,
+classname nvarchar(200))
+create table students (
+id int primary key,
+fullname nvarchar(200),
+adress nvarchar(200),
+class_id int foreign key references classes(id))
+
+
+--subjects(id, title, credit)
+create table subjects (
+id int primary key, 
+title nvarchar(200),
+credit int)
+
+--scores(id, student_id, subject_id, score)
+create table scores (
+id int,
+student_id int foreign key references students(id),
+subject_id int foreign key references subjects (id),
+score int)
+select *from students 
+select *from scores
+select *from  classes
+select *from subjects
+
+--Yêu cầu: Viết các câu lệnh SQL để giải quyết các bài toán sau:
+INSERT INTO classes (id, classname) VALUES
+(1, '10A1'),
+(2, '10A2'),
+(3, '11B1');
+INSERT INTO students (id, fullname, adress, class_id) VALUES
+(1, N'Nguyễn Văn A', N'Hà Nội', 1),
+(2, N'Trần Thị B', N'Nam Định', 1),
+(3, N'Lê Văn C', N'Hải Phòng', 2),
+(4, N'Phạm Thị D', N'Hà Nội', 3),
+(5, N'Ngô Văn E', N'Thái Bình', 2),
+(6, N'Hoàng Thị F', N'Hà Nam', 3);
+INSERT INTO subjects (id, title, credit) VALUES
+(1, N'Toán', 3),
+(2, N'Văn', 2),
+(3, N'Anh', 2),
+(4, N'Lý', 3);
+INSERT INTO scores (id, student_id, subject_id, score) VALUES
+(1, 1, 1, 8),  -- Nguyễn Văn A Toán
+(2, 1, 2, 7),  -- Nguyễn Văn A Văn
+(3, 2, 1, 5),  -- Trần Thị B Toán
+(4, 2, 3, 9),  -- Trần Thị B Anh
+(5, 3, 1, 6),  -- Lê Văn C Toán
+(6, 3, 4, 10), -- Lê Văn C Lý
+(7, 4, 2, 4),  -- Phạm Thị D Văn
+(8, 5, 3, 9),  -- Ngô Văn E Anh
+(9, 5, 4, 6),  -- Ngô Văn E Lý
+(10, 6, 1, 3); -- Hoàng Thị F Toán
+select *from students 
+select *from  classes
+select *from scores
+select *from subjects
+
+
+--Liệt kê 5 học sinh đầu tiên theo tên (tăng dần).
+select top 5 * from students
+order by fullname asc
+--Liệt kê 3 học sinh cuối cùng theo địa chỉ (giảm dần).
+SELECT TOP 3 *
+FROM students
+ORDER BY adress desc;
+--Hiển thị toàn bộ danh sách học sinh trong bảng students.
+select *from students 
+--Đếm số môn học mà mỗi học sinh đã đăng ký (hiển thị: student_id, num_subjects).
+SELECT student_id, COUNT(subject_id) AS num_subjects
+FROM scores
+GROUP BY student_id;
+--Hiển thị danh sách học sinh cùng số môn đã đăng ký (hiển thị: id, fullname, num_subjects).
+select s.id,
+      s.fullname,
+      count(sc.subject_id) as num_subjects
+from students s 
+left join scores sc on s.id = sc.subject_id 
+group by s.id, s.fullname
+--Tính tổng điểm mà mỗi học sinh đạt được (hiển thị: student_id, total_score).
+select s.id,
+    SUM(scores.score) as total_score
+    from students s
+left join scores on s.id = scores.student_id
+group by s.id
+--Chỉ hiển thị những học sinh có tổng điểm > 20.
+select s.id,
+    SUM(scores.score) as total_score
+    from students s
+left join scores on s.id = scores.student_id
+
+group by s.id
+having SUM(scores.score)>20
+--Với mỗi học sinh, cho biết điểm thấp nhất, điểm cao nhất và điểm trung bình.
+select s.id,
+        s.fullname,
+        min(sc.score) as diemthapnhat,
+        max(sc.score) as diemcaonhat,
+        AVG(cast(sc.score as float)) as diemtrungbinh
+        from students s
+        LEFT join scores sc on s.id = sc.student_id
+        group by s.id, s.fullname
+--Hiển thị danh sách học sinh cùng lớp học của họ (hiển thị: id, fullname, classname).
+select s.id,
+        s.fullname,
+        c.classname
+from students s
+left join classes c on c.id = s.class_id
+
+--Hiển thị danh sách học sinh cùng các môn học đã đăng ký và điểm số (hiển thị: id, fullname, title, score).
+ select s.id,
+        s.fullname,
+        su.title,
+        sc.score
+from students s
+left join scores sc on s.id = sc.student_id
+left join subjects su on sc.subject_id = su.id
