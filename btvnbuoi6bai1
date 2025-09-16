@@ -1,0 +1,151 @@
+--Tạo ra các bảng sau
+--- Bảng sinh viên gồm các thuộc tính : rollno, fullname, age, address, email, phoneNumber, gender 
+create table bangsinhvien (
+rollno int primary key ,
+fullname nvarchar(200),
+age int,
+address nvarchar(200),
+email nvarchar(200),
+phoneNumber int,
+gender nvarchar(200))
+
+
+--- Bảng môn học : mã môn học, tên môn học
+create table bangmonhoc (
+mamonhoc int primary key,
+tenmonhoc nvarchar(200))
+--- Bảng lớp học : mã lớp học, tên lớp học
+create table banglophoc (
+malophoc int primary key,
+tenlophoc nvarchar(200))
+--- Bảng điểm gồm các thuộc tinh sau : điểm, rollNo, mã môn học 
+--                    Tạo foreign key rollNo tới bảng sinh viên
+--                    Tạo foreign key mã môn học tới bản môn học
+create table bangdiem(
+diem int,
+rollno int foreign key references bangsinhvien(rollno),
+mamonhoc int foreign key references  bangmonhoc(mamonhoc)
+)
+
+--- Bảng quản lý lớp học : mã lớp học (liên kết tới bảng lớp học), rollNo (liên kết tới bản sinh viên), trướng khóa chính rollNo và mã lớp học
+create table bangquanlylophoc(
+malophoc int foreign key references banglophoc(malophoc),
+rollno int foreign key references bangsinhvien(rollno),
+primary key (rollno, malophoc)
+
+)
+--- Bảng phòng học : tên phòng học, mã phòng học,  sỗ bàn học, số ghế học,  địa chỉ lớp học - Tạo liên kết tới các bảng tương ứng
+create table bangphonghoc(
+tenphonghoc nvarchar(200),
+maphonghoc int primary key,
+sobanhoc int,
+soghehoc int,
+diachilophoc nvarchar(200))
+--- Bảng book giờ dạy : ma mon hoc, mã lớp học, giờ bắt đầu dạy, giờ trả lớp, mã phòng học - Tạo liên kết tới các bảng tương ứng
+create table bangbookgioday(
+mamonhoc int foreign key references bangmonhoc(mamonhoc),
+malophoc int foreign key references banglophoc(malophoc),
+giobatdauday date,
+giotralop date,
+maphonghoc int foreign key references bangphonghoc(maphonghoc))
+--Thực hiện thêm dữ liệu vào từng bảng, mỗi bảng thêm tối thiểu 5 bản ghi.
+INSERT INTO bangsinhvien (rollno, fullname, age, address, email, phoneNumber, gender)
+VALUES
+(1, N'TRAN VAN A', 20, N'Nam Định', 'vana@gmail.com', '0912345678', N'Nam'),
+(2, N'NGUYEN THI B', 19, N'Hà Nội', 'thib@gmail.com', '0987654321', N'Nữ'),
+(3, N'LE VAN C', 21, N'Nam Định', 'vanc@gmail.com', '0901234567', N'Nam'),
+(4, N'PHAM THI D', 20, N'Hải Phòng', 'thid@gmail.com', '0934567890', N'Nữ'),
+(5, N'DO VAN E', 22, N'Nghệ An', 'vane@gmail.com', '0976543210', N'Nam');
+INSERT INTO bangmonhoc (mamonhoc, tenmonhoc)
+VALUES
+(101, N'Toán cao cấp'),
+(102, N'Vật lý đại cương'),
+(103, N'Hóa học cơ bản'),
+(104, N'Lập trình C'),
+(105, N'Cơ sở dữ liệu');
+INSERT INTO banglophoc (malophoc, tenlophoc)
+VALUES
+(201, N'Lớp CNTT A8'),
+(202, N'Lớp CNTT A9'),
+(203, N'Lớp Toán A8'),
+(204, N'Lớp Hóa A7'),
+(205, N'Lớp Vật lý A6');
+INSERT INTO bangdiem (diem, rollno, mamonhoc)
+VALUES
+(8, 1, 101),
+(9, 1, 104),
+(7, 2, 102),
+(10, 3, 105),
+(6, 4, 103),
+(9, 5, 101);
+INSERT INTO bangquanlylophoc (malophoc, rollno)
+VALUES
+(201, 1),
+(201, 2),
+(202, 3),
+(203, 4),
+(204, 5);
+INSERT INTO bangphonghoc (tenphonghoc, maphonghoc, sobanhoc, soghehoc, diachilophoc)
+VALUES
+(N'Phòng A101', 301, 20, 40, N'Tầng 1 - Nhà A'),
+(N'Phòng A202', 302, 25, 50, N'Tầng 2 - Nhà A'),
+(N'Phòng B301', 303, 30, 60, N'Tầng 3 - Nhà B'),
+(N'Phòng C102', 304, 15, 30, N'Tầng 1 - Nhà C'),
+(N'Phòng D201', 305, 35, 70, N'Tầng 2 - Nhà D');
+INSERT INTO bangbookgioday (mamonhoc, malophoc, giobatdauday, giotralop, maphonghoc)
+VALUES
+(101, 201, '2025-09-20 07:30:00', '2025-09-20 09:30:00', 301),
+(102, 202, '2025-09-21 09:45:00', '2025-09-21 11:45:00', 302),
+(103, 203, '2025-09-22 13:00:00', '2025-09-22 15:00:00', 303),
+(104, 204, '2025-09-23 07:30:00', '2025-09-23 09:30:00', 304),
+(105, 205, '2025-09-24 15:30:00', '2025-09-24 17:30:00', 305);
+ALTER TABLE bangbookgioday
+ALTER COLUMN giobatdauday datetime;
+DELETE FROM bangbookgioday
+DELETE FROM bangsinhvien
+ALTER TABLE bangbookgioday
+ALTER COLUMN giotralop datetime;
+--Yêu cầu :
+--- Hiển thị thông tin tất cả các bảng
+SELECT * FROM bangsinhvien;
+SELECT * FROM bangdiem;
+-- Xem bảng môn học
+SELECT * FROM bangmonhoc;
+
+-- Xem bảng lớp học
+SELECT * FROM banglophoc;
+
+-- Xem bảng điểm
+SELECT * FROM bangdiem;
+
+-- Xem bảng quản lý lớp học
+SELECT * FROM bangquanlylophoc;
+
+-- Xem bảng phòng học
+SELECT * FROM bangphonghoc;
+
+-- Xem bảng book giờ dạy
+SELECT * FROM bangbookgioday;
+--- Hiển thị sinh viên có quê ở Nam Định
+SELECT * FROM bangsinhvien
+where address =N'Nam Định'
+--- Hiển thị lớp học có chứa chữ 'A8'
+SELECT * FROM banglophoc
+where tenlophoc like N'%A8%'
+--- Hiển thị thông tin sinh viên (RollNo, tên, và điểm thi) của sinh viên có tên là 'TRAN VAN A'
+
+select sv.rollno,sv.fullname,sc.diem
+from bangsinhvien sv
+left join bangdiem sc on sv.rollno=sc.rollno
+where fullname = N'TRAN VAN A'
+--- Hiển thị thông tin điểm thi (RollNo, tên, điểm thi) của tất cả sinh viên
+
+select sv.rollno,sv.fullname,sc.diem
+from bangsinhvien sv
+left join bangdiem sc on sv.rollno=sc.rollno
+--- Hiển thị thông tin điểm thì (RollNo, tên, điểm thi, môn học) của tất cả sinh viên
+select sv.rollno,sv.fullname,sc.diem,mh.tenmonhoc
+from bangsinhvien sv
+left join bangdiem sc on sv.rollno=sc.rollno
+left join bangmonhoc mh on sc.mamonhoc = mh.mamonhoc
+
