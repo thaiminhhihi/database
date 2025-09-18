@@ -1,0 +1,240 @@
+--1. Tạo bảng
+
+--Hãy tạo các bảng dữ liệu sau:
+
+--KhachHang: lưu thông tin khách hàng (id, họ tên, số điện thoại, ngày đăng ký).
+create table KhachHang(
+id int primary key,
+hoten nvarchar (200),
+number nvarchar (200),
+ngaydangky date,
+)
+
+--GoiTap: lưu thông tin các gói tập (id, tên gói, thời hạn theo tháng, giá).
+create table GoiTap(
+id int primary key,
+tengoi nvarchar (200),
+thoihan int,
+gia float)
+--DangKy: lưu thông tin khách hàng đăng ký gói tập (id, id khách hàng, id gói tập, ngày bắt đầu, ngày kết thúc).
+create table DangKy (
+id int,
+id_khach_hang int foreign key references KhachHang(id),
+id_goi_tap int foreign key references GoiTap(id),
+ngaybatdau date,
+ngayketthuc date
+)
+--HuanLuyenVien: lưu thông tin huấn luyện viên (id, họ tên, chuyên môn).
+create table HuanLuyenVien(
+id int primary key,
+hotenhlv nvarchar(200),
+chuyenmon nvarchar(200))
+--PhanCongHLV: phân công huấn luyện viên cho khách hàng (id, id khách hàng, id HLV, ngày phân công).
+create table PhanCongHLV(
+id int,
+id_khach_hang int foreign key references KhachHang(id),
+id_HLV int foreign key references HuanLuyenVien(id),
+ngayphancong date)
+
+--2. View
+create view view_khach_hang_goi 
+as
+select KH.id, KH.hoten, KH.number,GT.tengoi, DK.ngaybatdau, DK.ngayketthuc 
+from KhachHang KH left join DangKy DK on DK.id_khach_hang= KH.id
+left join GoiTap GT on DK.id_goi_tap = GT.id
+
+select * from view_khach_hang_goi 
+drop view view_khach_hang_goi 
+--Tạo view view_khach_hang_goi hiển thị: mã khách hàng, họ tên, số điện thoại, tên gói tập, ngày bắt đầu, ngày kết thúc.
+
+--Thực hiện lệnh SELECT * từ view vừa tạo.
+select * from view_khach_hang_goi 
+--Sau đó hãy ALTER VIEW để bỏ cột số điện thoại đi.
+alter view view_khach_hang_goi 
+as
+select KH.id, KH.hoten,GT.tengoi, DK.ngaybatdau, DK.ngayketthuc 
+from KhachHang KH left join DangKy DK on DK.id_khach_hang= KH.id
+left join GoiTap GT on DK.id_goi_tap = GT.id
+
+--Cuối cùng hãy thử DROP VIEW.
+drop view view_khach_hang_goi
+
+--3. Stored Procedure cơ bản
+
+--Tạo stored procedure proc_ds_khach_hang (không tham số), hiển thị danh sách khách hàng và các gói tập mà họ đã đăng ký.
+create proc proc_ds_khach_hang 
+as
+begin 
+ SELECT KH.id AS MaKhachHang,
+           KH.hoten,
+           GT.tengoi,
+           DK.ngaybatdau,
+           DK.ngayketthuc
+    FROM KhachHang KH
+    LEFT JOIN DangKy DK ON DK.id_khach_hang = KH.id
+    LEFT JOIN GoiTap GT ON DK.id_goi_tap = GT.id;
+END;
+
+exec proc_ds_khach_hang 
+--Thực thi proc này để kiểm tra kết quả.
+
+--4. Stored Procedure có tham số
+
+--Tạo proc proc_xem_khach_theo_goi nhận tham số @goiId int, hiển thị danh sách khách hàng đăng ký gói tập có mã là @goiId.
+create proc 
+proc_xem_khach_theo_goi 
+@goiID int
+as
+
+begin 
+ SELECT KH.id AS MaKhachHang,
+           KH.hoten,
+           GT.tengoi,
+           DK.ngaybatdau,
+           DK.ngayketthuc
+    FROM KhachHang KH
+    JOIN DangKy DK ON DK.id_khach_hang = KH.id
+     JOIN GoiTap GT ON DK.id_goi_tap = GT.id
+    where GT.id = @goiID
+END;
+
+
+
+
+
+
+--Gọi thử proc này với các giá trị khác nhau để xem kết quả.
+exec proc_xem_khach_theo_goi 1
+exec proc_xem_khach_theo_goi 2
+exec proc_xem_khach_theo_goi 3
+--5. Stored Procedure có tham số vào và ra
+ SELECT KH.id AS MaKhachHang,
+           KH.hoten,
+           GT.tengoi,
+           DK.ngaybatdau,
+           DK.ngayketthuc
+    FROM KhachHang KH
+    LEFT JOIN DangKy DK ON DK.id_khach_hang = KH.id
+    LEFT JOIN GoiTap GT ON DK.id_goi_tap = GT.id;
+--Tạo proc proc_dem_khach_trong_khoang với tham số:
+create proc proc_dem_khach_trong_khoang
+@start date,
+@end date,
+@count int output
+as
+begin
+ SELECT 
+ KH.id AS MaKhachHang,
+           KH.hoten,
+           GT.tengoi,
+           DK.ngaybatdau,
+           DK.ngayketthuc
+    FROM KhachHang KH
+    LEFT JOIN DangKy DK ON DK.id_khach_hang = KH.id
+    LEFT JOIN GoiTap GT ON DK.id_goi_tap = GT.id
+WHERE @start <= DK.ngaybatdau and DK.ngaybatdau <= @end
+ SELECT @count = count(KH.hoten) 
+FROM KhachHang KH
+    LEFT JOIN DangKy DK ON DK.id_khach_hang = KH.id
+    LEFT JOIN GoiTap GT ON DK.id_goi_tap = GT.id
+WHERE @start <= DK.ngaybatdau and DK.ngaybatdau <= @end
+end
+drop proc proc_dem_khach_trong_khoang
+declare @count int
+EXEC proc_dem_khach_trong_khoang 
+    @start = '2025-01-01', 
+    @end   = '2025-03-31',
+    @count =@count output 
+    PRINT N'Số khách hàng đăng ký trong khoảng: ' + CAST(@count AS NVARCHAR(10));
+
+--@start date, @end date (khoảng thời gian ngày đăng ký).
+
+--@count int output (trả về số lượng khách hàng đăng ký trong khoảng đó).
+
+--Thực thi proc, in kết quả bằng PRINT.
+
+--6. Stored Procedure nâng cao (nhiều output)
+
+--Tạo proc proc_thong_ke_gym với các tham số output:
+create proc proc_thong_ke_gym
+@countkhach int output,
+@countHLV int output,
+@msg nvarchar(200) output
+as
+begin
+select @countkhach = count(*) from KhachHang
+select @countHLV = count(*) from HuanLuyenVien
+select @msg = N'Thống kê thành công'
+end
+declare @countkhach int
+declare @countHLV int 
+declare @msg nvarchar(200) 
+exec proc_thong_ke_gym 
+@countkhach = @countkhach output,
+@countHLV = @countHLV output,
+@msg = @msg output;
+print @msg + Cast(@countkhach as nvarchar(20)) +N' '+ Cast(@countHLV as nvarchar(20))
+
+--@countKhach int output → số khách hàng.
+
+--@countHLV int output → số huấn luyện viên.
+
+--@msg nvarchar(200) output → chứa thông báo “Thống kê thành công”.
+
+--Gọi proc này, sau đó in ra cả 3 giá trị output.
+
+--7. Bài tập nâng cao
+
+--Viết một proc proc_xem_khach_theo_hlv nhận vào mã HLV, trả về danh sách các khách hàng mà HLV đó phụ trách.
+create proc proc_xem_khach_theo_hlv 
+@maHLV int
+as
+begin
+select KH.*, HLV.hotenhlv from KhachHang KH
+inner join PhanCongHLV on KH.id = PhanCongHLV.id_khach_hang
+inner join HuanLuyenVien HLV on HLV.id = PhanCongHLV.id_HLV
+end
+alter proc  proc_xem_khach_theo_hlv 
+@maHLV int
+as
+begin
+select KH.*,HLV.id, HLV.hotenhlv from KhachHang KH
+inner join PhanCongHLV on KH.id = PhanCongHLV.id_khach_hang
+inner join HuanLuyenVien HLV on HLV.id = PhanCongHLV.id_HLV
+end
+alter proc  proc_xem_khach_theo_hlv 
+@maHLV int
+as
+begin
+select KH.*,HLV.id, HLV.hotenhlv from KhachHang KH
+inner join PhanCongHLV on KH.id = PhanCongHLV.id_khach_hang
+inner join HuanLuyenVien HLV on HLV.id = PhanCongHLV.id_HLV
+where @maHLV = HLV.id
+end
+exec proc_xem_khach_theo_hlv  2
+INSERT INTO KhachHang VALUES 
+(1, N'Nguyễn Văn A', '0901111111', '2025-01-05'),
+(2, N'Trần Thị B', '0912222222', '2025-02-10'),
+(3, N'Lê Văn C', '0923333333', '2025-03-15');
+
+-- Gói tập
+INSERT INTO GoiTap VALUES
+(1, N'Gói 3 tháng', 3, 1500000),
+(2, N'Gói 6 tháng', 6, 2700000),
+(3, N'Gói 12 tháng', 12, 5000000);
+
+-- Đăng ký gói tập
+INSERT INTO DangKy VALUES
+(1, 1, 1, '2025-01-10', '2025-04-10'),
+(2, 2, 2, '2025-02-15', '2025-08-15'),
+(3, 3, 3, '2025-03-20', '2026-03-20');
+
+-- Huấn luyện viên
+INSERT INTO HuanLuyenVien VALUES
+(1, N'Phạm HLV 1', N'Thuật CrossFit'),
+(2, N'Đỗ HLV 2', N'Yoga');
+
+-- Phân công HLV
+INSERT INTO PhanCongHLV VALUES
+(1,1,1,'2025-01-11'),
+(2,2,2,'2025-02-16');
