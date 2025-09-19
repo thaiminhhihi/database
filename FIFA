@@ -1,0 +1,298 @@
+--1. Thiết kế CSDL và các bảng
+
+--Bảng Trọng tài (Referee)
+
+--id: int → primary key → identity(1,1)
+
+--fullname: nvarchar(50) → not null
+
+--address: nvarchar(200) → not null
+
+--level: float → cấp độ/đánh giá kinh nghiệm
+
+--exp: date → ngày bắt đầu tham gia làm trọng tài
+create table Referee (
+id int primary key identity (1,1),
+fullname nvarchar (50) not null,
+address nvarchar(200) not null,
+level float,
+exp date,
+)
+--Bảng Đội bóng (Club)
+
+--id: int → primary key → identity(1,1)
+
+--name: nvarchar(50) → tên đội bóng
+
+--stadium: nvarchar(100) → sân chủ nhà
+
+--coach: nvarchar(50) → huấn luyện viên
+create table Club (
+id int primary key identity (1,1),
+name nvarchar(50),
+stadium nvarchar(100),
+coach nvarchar (50))
+--Bảng Cầu thủ (Player)
+
+--id: int → primary key → identity(1,1)
+
+--fullname: nvarchar(50)
+
+--birthday: date
+
+--salary: money → lương/tuần
+
+--start_date: date → ngày bắt đầu tham gia thi đấu
+create table Player (
+id int primary key identity (1,1),
+fullname nvarchar(50),
+birthday date,
+salary money,
+start_date date)
+
+--Bảng Đội bóng – Cầu thủ (Club_Player)
+
+--id_club: int → FK tham chiếu Club(id)
+
+--id_player: int → FK tham chiếu Player(id)
+
+--join_date: date → ngày tham gia đội bóng
+
+--PK: (id_club, id_player)
+create table Club_Player (
+id_club int foreign key references Club(id),
+id_player int foreign key references Player(id),
+join_date date,
+Primary key (id_club,id_player))
+
+--Bảng Lịch sử bắt của trọng tài (Referee_History)
+
+--id: int → primary key → identity(1,1)
+
+--referee_id: int → FK tham chiếu Referee(id)
+
+--tournament: nvarchar(100) → tên giải đấu
+
+--match_date: date → ngày bắt chính
+
+--rate: float → đánh giá về trọng tài
+
+--id_club_1: int → FK tham chiếu Club(id)
+
+--id_club_2: int → FK tham chiếu Club(id)
+
+--note: nvarchar(500) → ghi chú
+create table Referee_History (
+id int primary key identity (1,1),
+referee_id int foreign key references Referee(id),
+tournament nvarchar(100),
+match_date date,
+rate float,
+id_club_1 int foreign key references Club(id),
+id_club_2 int foreign key references Club(id),
+note nvarchar(500)
+)
+
+--2. Thêm dữ liệu mẫu
+
+--Thêm ít nhất 5 bản ghi cho mỗi bảng (Referee, Club, Player).
+
+--Mỗi Club có ít nhất 3 Player.
+
+--Mỗi Referee có ít nhất 2 lịch sử bắt.
+-- Thêm trọng tài
+insert into Referee(fullname,address,level,exp)
+values
+(N'Nguyễn Văn A',N'Hà Nội',4.5,'2015-01-10'),
+(N'Trần Văn B',N'Hải Phòng',3.8,'2017-06-01'),
+(N'Lê Văn C',N'Đà Nẵng',4.0,'2016-03-20'),
+(N'Ngô Văn D',N'Nam Định',3.2,'2018-05-15'),
+(N'Phạm Văn E',N'TP.HCM',4.8,'2014-11-11');
+
+-- Thêm CLB
+insert into Club(name,stadium,coach)
+values
+(N'Hà Nội FC',N'Sân Hàng Đẫy',N'Huấn luyện 1'),
+(N'Hải Phòng FC',N'Lạch Tray',N'Huấn luyện 2'),
+(N'Đà Nẵng FC',N'Hòa Xuân',N'Huấn luyện 3'),
+(N'Nam Định FC',N'Thiên Trường',N'Huấn luyện 4'),
+(N'TP.HCM FC',N'Thống Nhất',N'Huấn luyện 5');
+
+-- Thêm cầu thủ
+insert into Player(fullname,birthday,salary,start_date)
+values
+(N'Cầu thủ 1','1995-01-01',5000000,'2020-01-01'),
+(N'Cầu thủ 2','1996-02-02',6000000,'2020-02-01'),
+(N'Cầu thủ 3','1997-03-03',7000000,'2020-03-01'),
+(N'Cầu thủ 4','1998-04-04',8000000,'2020-04-01'),
+(N'Cầu thủ 5','1999-05-05',9000000,'2020-05-01'),
+(N'Cầu thủ 6','2000-06-06',5500000,'2020-06-01'),
+(N'Cầu thủ 7','2001-07-07',6500000,'2020-07-01'),
+(N'Cầu thủ 8','2002-08-08',7500000,'2020-08-01'),
+(N'Cầu thủ 9','2003-09-09',8500000,'2020-09-01'),
+(N'Cầu thủ 10','2004-10-10',9500000,'2020-10-01');
+
+-- Gán cầu thủ cho CLB (mỗi CLB ít nhất 3 cầu thủ)
+insert into Club_Player(id_club,id_player,join_date)
+values
+(1,1,'2020-01-01'),
+(1,2,'2020-02-01'),
+(1,3,'2020-03-01'),
+(2,4,'2020-04-01'),
+(2,5,'2020-05-01'),
+(2,6,'2020-06-01'),
+(3,7,'2020-07-01'),
+(3,8,'2020-08-01'),
+(3,9,'2020-09-01'),
+(4,10,'2020-10-01');
+
+-- Thêm lịch sử trọng tài (mỗi trọng tài ít nhất 2)
+insert into Referee_History(referee_id,tournament,match_date,rate,id_club_1,id_club_2,note)
+values
+(1,N'V-League 2021','2021-03-01',4.2,1,2,N'Trận mở màn'),
+(1,N'V-League 2021','2021-04-15',4.5,2,3,N'Trận derby'),
+(2,N'Cúp Quốc Gia','2021-05-20',3.8,3,4,N'Bán kết'),
+(2,N'Cúp Quốc Gia','2021-06-10',3.5,1,3,N'Vòng 1/8'),
+(3,N'Siêu cúp','2021-07-01',4.0,4,5,N'Chung kết'),
+(3,N'V-League 2021','2021-08-05',4.1,1,5,N'Trận lượt về');
+select * from Referee;
+select * from Club;
+select * from Player;
+select * from Club_Player;
+select * from Referee_History;
+
+select * from Club;
+select * from Referee_History;
+--3. Truy vấn
+
+--Liệt kê danh sách lịch sử bắt gồm: tên trọng tài, level, exp, tên giải đấu, tên đội 1, tên đội 2.
+select Rf.fullname, Rf.level,Rf.exp , Rh.tournament , C1.name , C2.name 
+from Referee_History Rh
+inner join Referee Rf on Rf.id = Rh.referee_id
+inner join Club C1 on C1.id = Rh.id_club_1
+inner join Club C2 on C2.id = Rh.id_club_2
+
+--Liệt kê danh sách cầu thủ của một đội bóng bất kỳ (tham số đầu vào là tên hoặc id đội bóng).
+declare @id int =1;
+DECLARE @tendoibong NVARCHAR(100) = N'Hà Nội FC';
+select Player.fullname , Club.name
+from Player inner join Club_Player on Club_Player.id_player = Player.id
+inner join Club on Club.id = Club_Player.id_club
+where Club.id = @id or Club.name= @tendoibong
+
+--Tìm danh sách trọng tài đã từng bắt cho một đội bóng cụ thể (tham số đầu vào là id đội bóng).
+declare @iddoibong int =1 
+select Referee.fullname
+from Referee inner join Referee_History on  Referee_History.referee_id = Referee.id
+where Referee_History.id_club_1 = @iddoibong or Referee_History.id_club_2 = @iddoibong
+--Liệt kê tổng số tiền lương mỗi đội bóng phải trả cho cầu thủ của mình.
+Select Player.fullname, Sum(Player.salary * DATEDIFF(WEEK, Club_Player.join_date, GETDATE())) tongluong
+from Player join Club_Player on Club_Player.id_player = Player.id
+group by Player.fullname
+--Tìm đội bóng có tổng lương cầu thủ cao nhất.
+Select top 1 Club.name, Sum(Player.salary * DATEDIFF(WEEK, Club_Player.join_date, GETDATE())) tongluong
+from Player join Club_Player on Club_Player.id_player = Player.id
+join Club on Club.id = Club_Player.id_club
+group by Player.fullname,Club.name
+order by tongluong desc
+--4. VIEW
+
+--Tạo view vRefereeHistory hiển thị: tên trọng tài, level, exp, giải đấu, tên đội 1, tên đội 2, rate.
+create view vRefereeHistory as
+select Rf.fullname, Rf.level,Rf.exp , Rh.tournament , C1.name Club1name , C2.name Club2name, Rh.rate
+from Referee_History Rh
+inner join Referee Rf on Rf.id = Rh.referee_id
+inner join Club C1 on C1.id = Rh.id_club_1
+inner join Club C2 on C2.id = Rh.id_club_2
+
+select*from vRefereeHistory
+
+--Tạo view vClubPlayers hiển thị: tên đội bóng, tên cầu thủ, ngày tham gia đội bóng.
+create view vClubPlayers as
+Select  Club.name, Player.fullname, Club_Player.join_date
+from Player join Club_Player on Club_Player.id_player = Player.id
+join Club on Club.id = Club_Player.id_club
+
+select * from vClubPlayers
+--Tạo view vClubSalary hiển thị: tên đội bóng, tổng lương cầu thủ.
+create view vClubSalary as
+Select Club.name, Sum(Player.salary * DATEDIFF(WEEK, Club_Player.join_date, GETDATE())) tongluong
+from Player join Club_Player on Club_Player.id_player = Player.id
+join Club on Club.id = Club_Player.id_club
+group by Club.name
+
+select * from vClubSalary
+--5. STORED PROCEDURE / FUNCTION
+
+--Stored procedure ThemCauThu: thêm cầu thủ mới (tham số: tên, ngày sinh, lương, ngày bắt đầu).
+create proc addnewplayer 
+@ten nvarchar(200),
+@ngaysinh date,
+@luong money,
+@ngaybatdau date
+as
+begin
+insert into Player (fullname,birthday,salary,start_date)
+values (@ten,@ngaysinh,@luong,@ngaybatdau)
+end
+select * from Player
+exec addnewplayer 'ok', '1999-12-02',5000000, '2020-12-12'
+--Stored procedure DanhSachCauThuTheoDoiBong: trả về danh sách cầu thủ của một đội bóng (tham số: id_club).
+create proc DanhSachCauThuTheoDoiBong 
+@id_club int
+as
+begin
+select Player.* , Club.id, Club.name
+from Player inner join Club_Player on Player.id = Club_Player.id_player
+inner join Club on Club_Player.id_club = Club.id
+where Club.id = @id_club
+end
+
+exec DanhSachCauThuTheoDoiBong 1
+--Stored procedure LichSuTrongTaiTheoDoiBong: hiển thị lịch sử bắt của trọng tài cho một đội bóng (tham số: id_club).
+create proc LichSuTrongTaiTheoDoiBong 
+@iddoibong int
+as
+begin
+select Referee_History.*
+from Referee inner join Referee_History on  Referee_History.referee_id = Referee.id
+where Referee_History.id_club_1 = @iddoibong or Referee_History.id_club_2 = @iddoibong
+end
+
+exec LichSuTrongTaiTheoDoiBong  1
+--Function TinhTongLuongCauThu(id_club): trả về tổng lương của toàn bộ cầu thủ trong một đội bóng.
+alter proc TinhTongLuongCauThu
+@id_club int,
+@sum money output
+as
+begin
+Select Club.name, Sum(Player.salary * DATEDIFF(WEEK, Club_Player.join_date, GETDATE())) tongluong
+from Player join Club_Player on Club_Player.id_player = Player.id
+join Club on Club.id = Club_Player.id_club
+where Club.id = @id_club
+group by Club.name
+
+select @sum =Sum(Player.salary * DATEDIFF(WEEK, Club_Player.join_date, GETDATE()))
+from Player join Club_Player on Club_Player.id_player = Player.id
+join Club on Club.id = Club_Player.id_club
+where Club.id = @id_club
+group by Club.name
+end
+DECLARE @sum MONEY;
+EXEC TinhTongLuongCauThu  1, @sum = @sum OUTPUT;
+PRINT N'Tổng lương là ' + CAST(@sum AS NVARCHAR(200));
+--Function TinhTongLuongTatCa(): trả về tổng lương cầu thủ của tất cả các đội bóng trong hệ thống.
+
+alter proc TinhTongLuongTatCa
+@sum money output
+as
+begin
+select @sum =Sum(Player.salary * DATEDIFF(WEEK, Club_Player.join_date, GETDATE()))
+from Player join Club_Player on Club_Player.id_player = Player.id
+join Club on Club.id = Club_Player.id_club
+
+
+end
+declare @sum money
+exec TinhTongLuongTatCa @sum = @sum output
+Print 'tong luong la ' + CAST(@sum as nvarchar(200))
