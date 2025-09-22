@@ -1,0 +1,201 @@
+--1. Tạo CSDL và các bảng
+
+--Bảng Hotel (danh mục khách sạn):
+
+--id INT, khóa chính, tự tăng
+
+--hotel_name NVARCHAR(100), tên khách sạn
+
+--address NVARCHAR(200), địa chỉ khách sạn
+
+--area FLOAT, diện tích khách sạn
+
+--owner NVARCHAR(100), chủ sở hữu khách sạn
+
+--Bảng Room (danh mục phòng):
+
+--room_no INT, khóa chính
+
+--id_hotel INT, khóa ngoại tham chiếu Hotel(id)
+
+--area FLOAT, diện tích phòng
+
+--room_type NVARCHAR(50), loại phòng
+
+--floor INT, phòng thuộc tầng mấy
+
+--Bảng Book (thông tin đặt phòng):
+
+--id INT, khóa chính, tự tăng
+
+--room_no INT, khóa ngoại tham chiếu Room(room_no)
+
+--checkin_date DATE, ngày đặt phòng
+
+--checkout_date DATE, ngày trả phòng
+
+--num_people INT, số lượng người ở
+
+--price DECIMAL(12,2), giá tiền
+
+CREATE TABLE Hotel (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    hotel_name NVARCHAR(100) NOT NULL,
+    address NVARCHAR(200),
+    area FLOAT,
+    owner NVARCHAR(100)
+);
+
+
+CREATE TABLE Room (
+    room_no INT PRIMARY KEY,
+    id_hotel INT FOREIGN KEY REFERENCES Hotel(id),
+    area FLOAT,
+    room_type NVARCHAR(50),
+    floor INT
+);
+
+
+CREATE TABLE Book (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    room_no INT FOREIGN KEY REFERENCES Room(room_no),
+    checkin_date DATE,
+    checkout_date DATE,
+    num_people INT,
+    price DECIMAL(12,2)
+);
+
+--2. ALTER TABLE
+
+--Thêm ràng buộc CHECK cho số lượng người ở > 0
+ALTER TABLE Book
+ADD CONSTRAINT chk_num_people CHECK (num_people > 0);
+--Sửa kiểu dữ liệu giá tiền sang DECIMAL(18,2)
+ALTER TABLE Book
+ALTER COLUMN price DECIMAL(18,2);
+--Xóa một cột (ví dụ cột owner)
+alter table hotel
+drop column owner
+--3. Thao tác dữ liệu
+
+--Thêm ít nhất 3 khách sạn, 5 phòng mỗi khách sạn, và một số bản ghi đặt phòng.
+INSERT INTO Hotel(hotel_name, address, area) VALUES
+(N'Khách sạn Hà Nội', N'123 Lý Thường Kiệt, Hà Nội', 2000),
+(N'Khách sạn Sài Gòn', N'45 Nguyễn Huệ, TP.HCM', 3000),
+(N'Khách sạn Đà Nẵng', N'67 Trần Phú, Đà Nẵng', 2500);
+
+--Thêm 5 phòng cho mỗi khách sạn
+INSERT INTO Hotel(hotel_name, address, area) VALUES
+(N'Khách sạn Hà Nội', N'123 Lý Thường Kiệt, Hà Nội', 2000),
+(N'Khách sạn Sài Gòn', N'45 Nguyễn Huệ, TP.HCM', 3000),
+(N'Khách sạn Đà Nẵng', N'67 Trần Phú, Đà Nẵng', 2500);
+
+-- Xem ID của khách sạn vừa thêm
+SELECT * FROM Hotel;
+
+-- Giả sử ID = 1,2,3 thì ta insert phòng theo các ID này
+-- 2. Thêm phòng (Room)
+INSERT INTO Room(room_no, id_hotel, area, room_type, floor) VALUES
+(101, 1, 25, N'Single', 1),
+(102, 1, 35, N'Double', 1),
+(201, 2, 30, N'Double', 1),
+(202, 2, 28, N'Single', 1),
+(301, 3, 26, N'Single', 1);
+
+-- Kiểm tra phòng đã thêm
+SELECT * FROM Room;
+
+-- 3. Thêm đặt phòng (Book) – chỉ được dùng room_no có trong Room
+INSERT INTO Book(room_no, checkin_date, checkout_date, num_people, price) VALUES
+(101, '2025-09-20', '2025-09-22', 2, 1500000),
+(102, '2025-09-21', '2025-09-23', 1, 2000000),
+(201, '2025-09-19', '2025-09-21', 3, 2500000);
+
+-- Kiểm tra Book
+SELECT * FROM Book;
+
+--Cập nhật tên khách sạn.
+UPDATE Hotel
+SET hotel_name = N'Khách sạn Hà Nội Mới'
+WHERE id = 1;
+--Xóa 1 bản ghi đặt phòng.
+DELETE FROM Book WHERE id = 1;
+--4. Truy vấn dữ liệu
+
+--Hiển thị thông tin khách sạn gồm: Tên KS, địa chỉ, mã phòng, loại phòng, tầng
+
+--2.1. Tất cả các dữ liệu
+SELECT h.hotel_name, h.address, r.room_no, r.room_type, r.floor
+FROM Hotel h
+JOIN Room r ON h.id = r.id_hotel;
+--2.2. Chỉ phòng có diện tích ≥ 30m²
+SELECT h.hotel_name, h.address, r.room_no, r.room_type, r.floor, r.area
+FROM Hotel h
+JOIN Room r ON h.id = r.id_hotel
+WHERE r.area >= 30;
+--Thống kê số phòng theo khách sạn (Tên KS, địa chỉ, số phòng)
+SELECT h.hotel_name, h.address, COUNT(r.room_no) AS so_phong
+FROM Hotel h
+LEFT JOIN Room r ON h.id = r.id_hotel
+GROUP BY h.hotel_name, h.address;
+--Tất cả
+
+--Chỉ khách sạn có số phòng > 5
+SELECT h.hotel_name, h.address, COUNT(r.room_no) AS so_phong
+FROM Hotel h
+LEFT JOIN Room r ON h.id = r.id_hotel
+GROUP BY h.hotel_name, h.address
+HAVING COUNT(r.room_no) > 5;
+--Thống kê: Tên KS, địa chỉ, diện tích phòng lớn nhất
+SELECT h.hotel_name, h.address, MAX(r.area) AS max_area
+FROM Hotel h
+LEFT JOIN Room r ON h.id = r.id_hotel
+GROUP BY h.hotel_name, h.address;
+--Thống kê: Tên KS, địa chỉ, diện tích phòng nhỏ nhất
+SELECT h.hotel_name, h.address, MIN(r.area) AS max_area
+FROM Hotel h
+LEFT JOIN Room r ON h.id = r.id_hotel
+GROUP BY h.hotel_name, h.address;
+--Thống kê: Tên KS, địa chỉ, tổng diện tích phòng
+SELECT h.hotel_name, h.address, SUM(r.area) AS total_area
+FROM Hotel h
+LEFT JOIN Room r ON h.id = r.id_hotel
+GROUP BY h.hotel_name, h.address;
+SELECT h.hotel_name, h.address, AVG(r.area) AS avg_area
+FROM Hotel h
+LEFT JOIN Room r ON h.id = r.id_hotel
+GROUP BY h.hotel_name, h.address;
+--Thống kê: Tên KS, địa chỉ, diện tích trung bình
+
+--Tìm các khách sạn không có phòng nào
+SELECT h.hotel_name, h.address
+FROM Hotel h
+LEFT JOIN Room r ON h.id = r.id_hotel
+WHERE r.room_no IS NULL;
+--5. VIEW
+
+--Tạo view vHotelRoom hiển thị Tên KS, địa chỉ, mã phòng, loại phòng, tầng.
+CREATE VIEW vHotelRoom AS
+SELECT h.hotel_name, h.address, r.room_no, r.room_type, r.floor
+FROM Hotel h
+JOIN Room r ON h.id = r.id_hotel;
+--6. STORED PROCEDURE
+CREATE PROCEDURE sp_BookRoom
+    @room_no INT,
+    @checkin DATE,
+    @checkout DATE,
+    @num_people INT,
+    @price DECIMAL(18,2)
+AS
+BEGIN
+    INSERT INTO Book(room_no, checkin_date, checkout_date, num_people, price)
+    VALUES(@room_no, @checkin, @checkout, @num_people, @price);
+END;
+--Tạo procedure sp_BookRoom để thêm bản ghi đặt phòng, có tham số: mã phòng, ngày đến, ngày đi, số người, giá.
+
+--7. INDEX
+
+--Tạo index cho cột room_type trong bảng Room để tối ưu tìm kiếm theo loại phòng.
+CREATE INDEX idx_room_type ON Room(room_type);
+--Tạo index cho cột checkin_date trong bảng Book.
+CREATE INDEX idx_checkin_date ON Book(checkin_date);
