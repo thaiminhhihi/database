@@ -1,0 +1,293 @@
+--Bạn hãy xây dựng hệ thống quản lý kho và bán hàng gồm các bảng: Khách hàng, Đơn hàng, Sản phẩm, Chi tiết đơn hàng. Thực hiện đầy đủ các yêu cầu sau.
+
+--Phần 1: Thiết kế Cơ sở dữ liệu & Tạo bảng
+
+--Tạo database có tên WarehouseManagement.
+
+--Tạo các bảng:
+
+--tblCustomer
+
+--CustomerID: INT NOT NULL
+
+--CustomerName: NVARCHAR(100)
+
+--Email: NVARCHAR(100)
+
+--BirthDate: DATE
+CREATE TABLE tblCustomer (
+CustomerID int not null primary key,
+CustomerName NVARCHAR(100),
+Email NVARCHAR(100) unique,
+BirthDate DATE)
+
+--tblProduct
+CREATE TABLE tblProduct (
+ProductID INT NOT NULL primary key,
+ProductName NVARCHAR(100),
+StockQuantity INT check(StockQuantity >=0) ,
+Price DECIMAL(10,2),
+Description  NVARCHAR(255))
+
+--ProductID: INT NOT NULL
+
+--ProductName: NVARCHAR(100)
+
+--StockQuantity: INT
+
+--Price: DECIMAL(10,2)
+
+--Description: NVARCHAR(255)
+
+--tblOrder
+CREATE TABLE tblOrder(
+OrderID INT NOT NULL primary key ,
+CustomerID INT NOT NULL foreign key references tblCustomer(CustomerID) ,
+OrderDate DATETIME check (OrderDate <=GETDATE()))
+--OrderID: INT NOT NULL
+
+--CustomerID: INT NOT NULL
+
+--OrderDate: DATETIME
+
+--tblOrderLine (chi tiết đơn)
+CREATE TABLE tblOrderLine(
+OrderID INT NOT NULL foreign key references tblOrder(OrderID),
+ProductID INT NOT NULL foreign key references tblProduct(ProductID),
+Quantity INT,
+UnitPrice DECIMAL(10,2))
+--OrderID: INT NOT NULL
+
+--ProductID: INT NOT NULL
+
+--Quantity: INT
+
+--UnitPrice: DECIMAL(10,2)
+
+--Thiết lập:
+
+--Khóa chính (PRIMARY KEY) cho các bảng phù hợp.
+
+--Khóa ngoại (FOREIGN KEY) giữa tblOrder.CustomerID → tblCustomer.CustomerID, và tblOrderLine liên kết với tblOrder & tblProduct.
+
+--Ràng buộc UNIQUE cho Email trong bảng tblCustomer.
+
+--Ràng buộc CHECK để đảm bảo:
+
+--tblProduct.StockQuantity >= 0
+
+--tblOrder.OrderDate không được trong tương lai (<= GETDATE()).
+-- Xem toàn bộ dữ liệu bảng khách hàng
+SELECT * FROM tblCustomer;
+
+-- Xem toàn bộ dữ liệu bảng sản phẩm
+SELECT * FROM tblProduct;
+
+-- Xem toàn bộ dữ liệu bảng đơn hàng
+SELECT * FROM tblOrder;
+
+-- Xem toàn bộ dữ liệu bảng chi tiết đơn hàng
+SELECT * FROM tblOrderLine;
+
+--Tạo index (clustered hoặc non-clustered) nếu thấy hợp lý để tối ưu các truy vấn liên quan đến tìm sản phẩm theo tên hoặc tìm đơn hàng theo ngày.
+create nonclustered index timtheoten  on  tblProduct(ProductName)
+create nonclustered index timdontheongay on tblOrder(OrderDate)
+--Phần 2: Dữ liệu mẫu
+
+--Insert dữ liệu giả lập:
+
+--Ít nhất 6 khách hàng, với ngày sinh khác nhau.
+
+--Ít nhất 5 sản phẩm, với số lượng trong kho và giá khác nhau.
+
+--Ít nhất 7 đơn hàng, mỗi đơn có ít nhất một chi tiết đơn hàng.
+
+--Chi tiết đơn hàng bao gồm số lượng sản phẩm và đơn giá (có thể bằng giá sản phẩm hoặc khác nếu cần).
+-- 6 khách hàng
+INSERT INTO tblCustomer (CustomerID, CustomerName, Email, BirthDate) VALUES
+(1, N'Nguyễn Văn A', 'vana@example.com', '1990-01-01'),
+(2, N'Trần Thị B', 'thib@example.com', '1995-03-12'),
+(3, N'Lê Văn C', 'vanc@example.com', '1988-05-25'),
+(4, N'Phạm Thị D', 'thid@example.com', '1999-07-30'),
+(5, N'Huỳnh Văn E', 'vane@example.com', '1992-10-10'),
+(6, N'Ngô Thị F', 'thif@example.com', '2000-12-05');
+
+
+-- 5 sản phẩm
+INSERT INTO tblProduct (ProductID, ProductName, StockQuantity, Price, Description) VALUES
+(1, N'Áo thun trắng', 100, 120000.00, N'Áo cotton'),
+(2, N'Quần jeans', 50, 350000.00, N'Quần jeans nam'),
+(3, N'Giày thể thao', 30, 500000.00, N'Giày sneaker'),
+(4, N'Mũ lưỡi trai', 200, 80000.00, N'Mũ thời trang'),
+(5, N'Túi xách', 15, 700000.00, N'Túi da cao cấp');
+
+INSERT INTO tblOrder (OrderID, CustomerID, OrderDate) VALUES
+(1, 1, '2025-09-01'),
+(2, 2, '2025-09-02'),
+(3, 3, '2025-09-03'),
+(4, 1, '2025-09-04'),
+(5, 4, '2025-09-05'),
+(6, 5, '2025-09-06'),
+(7, 6, '2025-09-07');
+-- Chi tiết đơn hàng
+INSERT INTO tblOrderLine (OrderID, ProductID, Quantity, UnitPrice) VALUES
+(1, 1, 2, 120000.00),
+(1, 2, 1, 350000.00),
+(2, 3, 1, 500000.00),
+(3, 4, 3, 80000.00),
+(4, 1, 1, 120000.00),
+(4, 5, 1, 700000.00),
+(5, 2, 2, 350000.00),
+(6, 3, 1, 500000.00),
+(7, 4, 5, 80000.00);
+
+
+
+--Phần 3: Các nghiệp vụ và truy vấn
+
+--Hãy viết các câu lệnh SQL thực hiện:
+
+--Cập nhật giá sản phẩm có ProductID = 3, giảm giá 20 % so với giá hiện tại.
+update tblProduct 
+set Price = Price - (Price*0.2)
+where ProductID =3
+
+--Truy xuất danh sách gồm: CustomerID, CustomerName, OrderID, OrderDate, ProductName, Quantity, UnitPrice cho tất cả các đơn hàng.
+SELECT c.CustomerID, c.CustomerName, o.OrderID, o.OrderDate,
+       p.ProductName, ol.Quantity, ol.UnitPrice
+FROM tblCustomer c
+JOIN tblOrder o ON c.CustomerID = o.CustomerID
+JOIN tblOrderLine ol ON o.OrderID = ol.OrderID
+JOIN tblProduct p ON ol.ProductID = p.ProductID;
+-- Xem toàn bộ dữ liệu bảng khách hàng
+SELECT * FROM tblCustomer;
+
+-- Xem toàn bộ dữ liệu bảng sản phẩm
+SELECT * FROM tblProduct;
+
+-- Xem toàn bộ dữ liệu bảng đơn hàng
+SELECT * FROM tblOrder;
+
+-- Xem toàn bộ dữ liệu bảng chi tiết đơn hàng
+SELECT * FROM tblOrderLine;
+--Truy vấn sử dụng LEFT JOIN để hiển thị tất cả đơn hàng ngay cả khi chưa có chi tiết đơn hàng nào.
+SELECT o.OrderID, o.OrderDate, c.CustomerName, 
+       p.ProductName, ol.Quantity, ol.UnitPrice
+FROM tblOrder o
+LEFT JOIN tblCustomer c ON o.CustomerID = c.CustomerID
+LEFT JOIN tblOrderLine ol ON o.OrderID = ol.OrderID
+LEFT JOIN tblProduct p ON ol.ProductID = p.ProductID;
+--Truy vấn sử dụng INNER JOIN để chỉ lấy các đơn hàng có chi tiết sản phẩm.
+SELECT o.OrderID, o.OrderDate, c.CustomerName, 
+       p.ProductName, ol.Quantity, ol.UnitPrice
+FROM tblOrder o
+INNER JOIN tblCustomer c ON o.CustomerID = c.CustomerID
+INNER JOIN tblOrderLine ol ON o.OrderID = ol.OrderID
+INNER JOIN tblProduct p ON ol.ProductID = p.ProductID;
+--Tạo VIEW tên view_TopProducts để hiển thị top 3 sản phẩm bán được nhiều nhất (theo tổng Quantity trong tất cả chi tiết đơn hàng), gồm các trường: ProductID, ProductName, TổngSốLượngBán.
+select top 3 p.ProductID, p.ProductName, Sum(ol.Quantity) tongsoluongban
+from tblProduct p join tblOrderLine ol on ol.ProductID = p.ProductID
+group by p.ProductID, p.ProductName
+order by Sum(ol.Quantity) desc
+
+--Tạo Stored Procedure sp_FindProductsByMaxPrice:
+alter Procedure sp_FindProductsByMaxPrice
+@MaxPrice DECIMAL(10,2),
+@Count int output
+as
+begin
+SELECT * FROM tblProduct
+where price <= @MaxPrice
+Select @Count = count(*) from tblProduct
+where price <= @MaxPrice
+
+
+end
+declare @Count int
+ exec sp_FindProductsByMaxPrice 500000, @Count = @Count output
+Print CAST(@Count as nvarchar(50))
+--Tham số vào là @MaxPrice kiểu DECIMAL(10,2).
+
+--Tham số output @Count kiểu INT.
+
+--Thực hiện tìm tất cả sản phẩm có giá <= @MaxPrice, và trả ra số lượng sản phẩm tìm được qua @Count.
+
+--Tạo Trigger trg_Product_PriceUpdate trên bảng tblProduct:
+
+--Khi có update trên cột Price, nếu giá mới thấp hơn 5.00, thì rollback transaction và cảnh báo (print) một thông báo như “Giá sản phẩm không được thấp hơn 5.00”.
+use btvnbuoi8bai1
+create Trigger trg_Product_PriceUpdate 
+on tblProduct
+for update 
+as
+begin
+if (select count(*) from inserted where price < 5.00) >0
+begin 
+Print N'Giá sản phẩm không được thấp hơn 5.00'
+rollback transaction
+end
+end
+
+--Tạo Trigger trg_Customer_EmailUpdate trên bảng tblCustomer:
+
+--Khi update cột Email, nếu giá trị mới không có dấu '@' thì rollback transaction và cảnh báo (print) “Email không hợp lệ”.
+create trigger trg_Customer_EmailUpdate on tblCustomer
+for update
+as
+begin
+if exists (select count (*) from inserted where email not like N'%@%')
+begin
+print N'Email không hợp lệ'
+rollback transaction
+
+end
+end
+
+--Phần 4: Các câu hỏi lý thuyết
+
+--A. Giải thích sự khác nhau giữa INNER JOIN, LEFT JOIN, RIGHT JOIN.
+
+--B. Khi nào nên dùng CHECK constraint và DEFAULT constraint? Cho ví dụ.
+
+--C. Ưu điểm của việc tạo index là gì? Khi nào index lại có thể khiến hiệu suất giảm?
+
+--D. Sự khác biệt giữa VIEW và Stored Procedure là gì?
+
+--E. Giải thích trigger là gì, và khi nào nên (và không nên) dùng trigger trong thực tế.
+--Phần 4: Lý thuyết
+
+--A. INNER JOIN, LEFT JOIN, RIGHT JOIN:
+
+--INNER JOIN: chỉ lấy các bản ghi có dữ liệu khớp ở cả 2 bảng.
+
+--LEFT JOIN: lấy toàn bộ bản ghi từ bảng bên trái, nếu không khớp bên phải thì NULL.
+
+--RIGHT JOIN: ngược lại, lấy toàn bộ bản ghi từ bảng bên phải, bên trái không khớp thì NULL.
+
+--B. Khi dùng CHECK & DEFAULT:
+
+--CHECK: đảm bảo giá trị cột thoả điều kiện.
+--Ví dụ: CHECK (Age >=18) để chỉ nhập người ≥18 tuổi.
+
+--DEFAULT: gán giá trị mặc định khi không nhập.
+--Ví dụ: DEFAULT GETDATE() cho cột NgayTao.
+
+--C. Ưu điểm & nhược điểm index:
+
+--Ưu điểm: tăng tốc truy vấn SELECT, tìm kiếm, sắp xếp.
+
+--Nhược điểm: làm chậm INSERT/UPDATE/DELETE do phải cập nhật index, chiếm thêm bộ nhớ.
+
+--D. VIEW vs Stored Procedure:
+
+--VIEW: là bảng ảo, chứa câu truy vấn SELECT, không chứa logic phức tạp.
+
+--Stored Procedure: chứa nhiều lệnh SQL (SELECT, INSERT, UPDATE…), có tham số, có thể trả output, logic phức tạp hơn.
+
+--E. Trigger là gì & khi nào nên dùng:
+
+--Trigger: thủ tục đặc biệt tự động chạy khi có sự kiện (INSERT/UPDATE/DELETE).
+
+--Nên dùng khi muốn kiểm tra/ràng buộc dữ liệu tự động mà constraint không đủ.
+
+--Không nên lạm dụng: trigger quá nhiều gây khó debug, giảm hiệu năng.
