@@ -1,0 +1,365 @@
+--Bạn được giao xây dựng một hệ thống quản lý thư viện với các thực thể: Thể loại sách (Category), Tác giả (Author), Sách (Book), Độc giả (Reader), Mượn trả (BorrowReturn). Thực hiện các yêu cầu dưới đây.
+
+--Phần 1: Tạo Cơ sở dữ liệu và các bảng
+
+--Tạo database LibraryManagement.
+
+--Tạo các bảng:
+
+--Category
+
+--CategoryID: INT NOT NULL
+
+--CategoryName: NVARCHAR(100)
+
+--Author
+
+--AuthorID: INT NOT NULL
+
+--AuthorName: NVARCHAR(100)
+
+--Country: NVARCHAR(100)
+
+--Book
+
+--BookID: INT NOT NULL
+
+--Title: NVARCHAR(200)
+
+--PublishYear: INT
+
+--Price: DECIMAL(10,2)
+
+--CategoryID: INT
+
+--AuthorID: INT
+
+--Reader
+
+--ReaderID: INT NOT NULL
+
+--ReaderName: NVARCHAR(100)
+
+--BirthDate: DATE
+
+--PhoneNumber: NVARCHAR(15)
+
+--BorrowReturn
+
+--BorrowID: INT NOT NULL
+
+--BookID: INT NOT NULL
+
+--ReaderID: INT NOT NULL
+
+--BorrowDate: DATETIME
+
+--ReturnDate: DATETIME NULL
+
+--Thiết lập:
+
+--Khóa chính (PRIMARY KEY) cho mỗi bảng.
+
+--Khóa ngoại:
+
+--Book.CategoryID → Category.CategoryID
+
+--Book.AuthorID → Author.AuthorID
+
+--BorrowReturn.BookID → Book.BookID
+
+--BorrowReturn.ReaderID → Reader.ReaderID
+
+--Ràng buộc CHECK:
+
+--PublishYear phải lớn hơn 1900 và nhỏ hơn hoặc bằng năm hiện tại (GETDATE()).
+
+--Price >= 0.
+
+--Reader.BirthDate không được lớn hơn ngày hiện tại.
+
+--Ràng buộc UNIQUE nếu cần:
+
+--Số điện thoại trong Reader không được trùng lặp.
+
+--Thực hiện ALTER TABLE để thêm các ràng buộc (nếu bạn ban đầu tạo bảng mà chưa có).
+CREATE TABLE Category (
+    CategoryID INT NOT NULL PRIMARY KEY,
+    CategoryName NVARCHAR(100) NOT NULL
+);
+
+-- Bảng Author
+CREATE TABLE Author (
+    AuthorID INT NOT NULL PRIMARY KEY,
+    AuthorName NVARCHAR(100) NOT NULL,
+    Country NVARCHAR(100)
+);
+
+-- Bảng Book
+CREATE TABLE Book (
+    BookID INT NOT NULL PRIMARY KEY,
+    Title NVARCHAR(200) NOT NULL,
+    PublishYear INT,
+    Price DECIMAL(10,2),
+    CategoryID INT,
+    AuthorID INT,
+    CONSTRAINT FK_Book_Category FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID),
+    CONSTRAINT FK_Book_Author FOREIGN KEY (AuthorID) REFERENCES Author(AuthorID),
+    CONSTRAINT CK_Book_PublishYear CHECK (PublishYear > 1900 AND PublishYear <= YEAR(GETDATE())),
+    CONSTRAINT CK_Book_Price CHECK (Price >= 0)
+);
+
+-- Bảng Reader
+CREATE TABLE Reader (
+    ReaderID INT NOT NULL PRIMARY KEY,
+    ReaderName NVARCHAR(100) NOT NULL,
+    BirthDate DATE,
+    PhoneNumber NVARCHAR(15) UNIQUE,
+    CONSTRAINT CK_Reader_BirthDate CHECK (BirthDate <= GETDATE())
+);
+
+-- Bảng BorrowReturn
+CREATE TABLE BorrowReturn (
+    BorrowID INT NOT NULL PRIMARY KEY,
+    BookID INT NOT NULL,
+    ReaderID INT NOT NULL,
+    BorrowDate DATETIME,
+    ReturnDate DATETIME NULL,
+    CONSTRAINT FK_BorrowReturn_Book FOREIGN KEY (BookID) REFERENCES Book(BookID),
+    CONSTRAINT FK_BorrowReturn_Reader FOREIGN KEY (ReaderID) REFERENCES Reader(ReaderID)
+);
+--Phần 2: Dữ liệu mẫu
+
+--Chèn vào:
+
+--Ít nhất 4 thể loại sách.
+
+--Ít nhất 5 tác giả từ các quốc gia khác nhau.
+
+--Ít nhất 8 sách, thuộc các thể loại khác nhau, năm xuất bản & giá khác nhau, mỗi sách có một tác giả.
+
+--Ít nhất 5 độc giả với ngày sinh hợp lý & số điện thoại.
+
+--Ít nhất 10 bản ghi mượn trả (BorrowReturn), có ReturnDate cho một số, cho một số vẫn NULL (chưa trả).
+INSERT INTO Category VALUES
+(1, N'Tiểu thuyết'),
+(2, N'Khoa học'),
+(3, N'Lịch sử'),
+(4, N'Thiếu nhi');
+
+-- Author
+INSERT INTO Author VALUES
+(1, N'Nguyễn Nhật Ánh', N'Việt Nam'),
+(2, N'J.K. Rowling', N'Anh'),
+(3, N'Stephen Hawking', N'Anh'),
+(4, N'Haruki Murakami', N'Nhật Bản'),
+(5, N'Yuval Noah Harari', N'Israel');
+
+-- Book
+INSERT INTO Book (BookID, Title, PublishYear, Price, CategoryID, AuthorID)
+VALUES
+(1, N'Mắt Biếc', 1990, 150.00, 1, 1),
+(2, N'Harry Potter và Hòn đá Phù thủy', 2001, 250.00, 1, 2),
+(3, N'Lược sử thời gian', 2010, 300.00, 2, 3),
+(4, N'Kafka bên bờ biển', 2005, 220.00, 1, 4),
+(5, N'21 bài học cho thế kỷ 21', 2018, 350.00, 2, 5),
+(6, N'Cho tôi xin một vé đi tuổi thơ', 2008, 180.00, 4, 1),
+(7, N'Harry Potter và Phòng chứa bí mật', 2003, 270.00, 1, 2),
+(8, N'Trong hành trình thời gian', 2015, 320.00, 2, 3);
+
+-- Reader
+INSERT INTO Reader VALUES
+(1, N'Nguyễn Văn A', '1995-02-01', '0901111111'),
+(2, N'Trần Thị B', '2000-07-15', '0902222222'),
+(3, N'Lê Văn C', '1998-05-10', '0903333333'),
+(4, N'Phạm Thị D', '1989-12-30', '0904444444'),
+(5, N'Đỗ Văn E', '2003-03-20', '0905555555');
+select *from Reader
+select *from BorrowReturn
+-- BorrowReturn
+INSERT INTO BorrowReturn VALUES
+(1, 1, 1, '2023-08-01', '2023-08-10'),
+(2, 2, 1, '2023-09-01', NULL),
+(3, 3, 2, '2023-09-05', '2023-09-20'),
+(4, 4, 3, '2023-09-10', NULL),
+(5, 5, 3, '2023-08-15', '2023-08-25'),
+(6, 6, 4, '2023-09-18', NULL),
+(7, 7, 4, '2023-09-20', NULL),
+(8, 8, 5, '2023-08-01', '2023-08-30'),
+(9, 1, 5, '2023-09-01', NULL),
+(10, 2, 5, '2023-07-01', NULL);
+--Phần 3: Thao tác & truy vấn
+
+--Viết các câu SQL thực hiện:
+
+--Tạo cột mới trong bảng Book: Stock (INT) — số lượng sách hiện có trong kho.
+Alter table Book 
+add  Stock int
+
+--Cập nhật một vài cuốn sách để có Stock khác nhau (ví dụ, 0, 5, 10…).
+UPDATE Book SET Stock = 5 WHERE BookID = 1;
+UPDATE Book SET Stock = 0 WHERE BookID = 2;
+UPDATE Book SET Stock = 10 WHERE BookID = 3;
+--Truy vấn tất cả các sách (BookID, Title, Price, CategoryName, AuthorName).
+SELECT b.BookID, b.Title, b.Price, c.CategoryName, a.AuthorName
+FROM Book b
+JOIN Category c ON b.CategoryID = c.CategoryID
+JOIN Author a ON b.AuthorID = a.AuthorID;
+--Truy vấn các cuốn sách có giá > 200 và năm xuất bản từ 2000 đến hiện tại.
+select *from book
+where Price >200 and PublishYear Between 2000 and Year(GETDATE())
+--Truy vấn các đọc giả cùng với số lượng sách họ đang mượn (ReturnDate IS NULL).
+SELECT 
+    r.ReaderID,
+    r.ReaderName,
+    COUNT(br.BorrowID) AS SoSachDangMuon
+FROM Reader r
+LEFT JOIN BorrowReturn br 
+       ON r.ReaderID = br.ReaderID 
+       and br.ReturnDate is null
+       group by  r.ReaderID,
+
+    r.ReaderName
+
+--Tạo VIEW view_Books_By_Author gồm AuthorName, BookID, Title, sắp xếp theo AuthorName.
+CREATE VIEW view_Books_By_Author AS
+SELECT  TOP 100 PERCENT a.AuthorName, b.BookID, b.Title
+FROM Book b
+JOIN Author a ON b.AuthorID = a.AuthorID
+ORDER BY a.AuthorName;
+
+select *from view_Books_By_Author
+--Tạo VIEW view_Overdue để hiển thị các bản ghi mượn trả mà ngày mượn cách ngày hiện tại đã hơn 30 ngày và chưa trả (ReturnDate IS NULL), gồm BorrowID, ReaderName, BookTitle, BorrowDate.
+CREATE VIEW view_Overdue AS
+SELECT br.BorrowID, r.ReaderName, b.Title AS BookTitle, br.BorrowDate
+FROM BorrowReturn br
+JOIN Reader r ON br.ReaderID = r.ReaderID
+JOIN Book b ON br.BookID = b.BookID
+where  br.ReturnDate IS NULL 
+and DATEDIFF (Day, br.BorrowDate,GETDATE() )>30
+drop view view_Overdue
+select *from view_Overdue
+--Tạo Stored Procedure sp_UpdateBookPrice:
+
+--Tham số vào: @BookID INT, @NewPrice DECIMAL(10,2).
+
+--Kiểm tra nếu @NewPrice < 0 thì không thực hiện update, trả về lỗi hoặc thông báo.
+
+--Nếu hợp lệ, cập nhật giá mới cho sách có BookID.
+create Procedure sp_UpdateBookPrice
+@BookID INT,
+@NewPrice DECIMAL(10,2)
+as
+begin
+if @NewPrice < 0 
+begin
+return
+end
+update Book
+set Book.Price = @NewPrice
+where Book.BookID = @BookID
+end
+--Tạo Stored Procedure sp_GetReaderBorrowHistory:
+
+--Tham số vào: @ReaderID INT.
+
+--Trả về danh sách các sách đã mượn bởi Reader này, gồm BookID, Title, BorrowDate, ReturnDate.
+create Procedure sp_GetReaderBorrowHistory
+@ReaderID INT
+as
+begin
+ SELECT b.BookID, b.Title, br.BorrowDate, br.ReturnDate
+    FROM BorrowReturn br
+    JOIN Book b ON br.BookID = b.BookID
+    WHERE br.ReaderID = @ReaderID;
+end
+
+--Tạo Trigger trg_BorrowReturn_Insert trên bảng BorrowReturn:
+
+--Khi insert, nếu BorrowDate > ngày hiện tại thì rollback transaction và báo lỗi: “Ngày mượn không thể trong tương lai”.
+create trigger trg_BorrowReturn_Insert on BorrowReturn
+for insert 
+as
+begin
+if exists( select count(*)from inserted where BorrowDate > GETDATE())
+begin
+print N'“Ngày mượn không thể trong tương lai'
+rollback transaction
+
+end
+end
+
+
+
+--Tạo Trigger trg_Book_Delete trên bảng Book:
+
+--Khi xóa sách, nếu có bản ghi mượn trả mà ReturnDate là NULL (chưa trả) đối với cuốn sách đó thì không cho phép xóa và xuất thông báo “Không thể xoá cuốn sách đang được mượn”.
+CREATE TRIGGER trg_InsteadDelete_Book
+ON Book
+INSTEAD OF DELETE
+AS
+BEGIN
+  IF EXISTS (SELECT 1 FROM BorrowReturn br
+             JOIN deleted d ON br.BookID = d.BookID
+             WHERE br.ReturnDate IS NULL)
+  BEGIN
+    RAISERROR(N'Không thể xoá cuốn sách đang được mượn',16,1);
+    ROLLBACK TRANSACTION; -- chặn xóa
+  END
+  ELSE
+  BEGIN
+    DELETE FROM Book WHERE BookID IN (SELECT BookID FROM deleted); 
+  END
+END
+
+--Phần 4: Các câu hỏi lý thuyết
+
+--A. Giải thích sự khác biệt giữa CREATE TABLE và ALTER TABLE. Khi nào dùng ALTER?
+
+--B. Khi nào nên sử dụng ràng buộc CHECK? Và ưu nhược điểm của CHECK so với kiểm tra trong ứng dụng (application)?
+
+--C. View có những lợi ích gì? Lợi ích và hạn chế của việc dùng view?
+
+--D. Stored Procedure vs Inline SQL Queries: những ưu điểm khi dùng SP? Khi nào SP có thể không phù hợp?
+
+--E. Trigger là gì? Kể các trường hợp nên sử dụng trigger và các trường hợp nên tránh.
+Phần 4: Lý thuyết
+A. CREATE TABLE vs ALTER TABLE
+
+CREATE TABLE: Tạo mới hoàn toàn một bảng.
+
+ALTER TABLE: Thay đổi cấu trúc bảng hiện có (thêm/xóa/sửa cột, thêm ràng buộc…).
+
+Dùng ALTER khi bảng đã tồn tại nhưng muốn chỉnh sửa mà không xoá dữ liệu.
+
+B. Khi nào dùng CHECK
+
+Khi muốn đảm bảo dữ liệu nhập vào đúng quy tắc (ví dụ năm xuất bản >1900).
+
+Ưu điểm: kiểm tra trực tiếp trong DB, mọi ứng dụng cùng dùng DB đều tuân theo.
+
+Nhược điểm: phức tạp hơn nếu logic thay đổi nhiều, không linh hoạt bằng kiểm tra ở ứng dụng.
+
+C. Lợi ích của View
+
+Ẩn bớt cột/logic phức tạp, giúp truy vấn dễ hơn.
+
+Bảo mật (không cho xem bảng gốc).
+
+Có thể tái sử dụng.
+
+Hạn chế: không lưu dữ liệu (trừ indexed view), có thể chậm nếu truy vấn phức tạp.
+
+D. Stored Procedure vs Inline SQL
+
+Ưu điểm SP: tăng hiệu năng (đã biên dịch), dễ bảo trì, kiểm soát bảo mật, tái sử dụng.
+
+Không phù hợp: các truy vấn rất linh hoạt, thay đổi thường xuyên (phải sửa SP).
+
+E. Trigger
+
+Là đoạn code tự chạy khi có sự kiện (INSERT/UPDATE/DELETE) trên bảng.
+
+Nên dùng: kiểm tra ràng buộc phức tạp, tự động ghi log, tự động tính toán.
+
+Tránh dùng: logic nghiệp vụ nặng, làm chậm giao dịch, thay cho toàn bộ logic ứng dụng.
