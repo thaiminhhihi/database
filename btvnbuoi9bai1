@@ -1,0 +1,152 @@
+CREATE DATABASE tour;
+GO
+USE tour;
+GO
+CREATE TABLE customer (
+    id INT IDENTITY(1,1),
+    fullname VARCHAR(100),
+    birthday DATE,
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    point INT
+);
+
+CREATE TABLE places (
+    id INT IDENTITY(1,1),
+    name VARCHAR(100),
+    address VARCHAR(200)
+);
+
+CREATE TABLE tour (
+    id INT IDENTITY(1,1),
+    places_id INT,
+    start_date DATE,
+    end_date DATE,
+    price FLOAT
+);
+
+CREATE TABLE booking (
+    id INT IDENTITY(1,1),
+    tour_id INT,
+    customer_id INT,
+    booking_date DATE
+);
+ALTER TABLE customer ADD CONSTRAINT PK_customer PRIMARY KEY (id);
+ALTER TABLE places ADD CONSTRAINT PK_places PRIMARY KEY (id);
+ALTER TABLE tour ADD CONSTRAINT PK_tour PRIMARY KEY (id);
+ALTER TABLE booking ADD CONSTRAINT PK_booking PRIMARY KEY (id);
+
+ALTER TABLE tour 
+ADD CONSTRAINT FK_tour_places FOREIGN KEY (places_id) REFERENCES places(id);
+
+ALTER TABLE booking 
+ADD CONSTRAINT FK_booking_tour FOREIGN KEY (tour_id) REFERENCES tour(id);
+
+ALTER TABLE booking 
+ADD CONSTRAINT FK_booking_customer FOREIGN KEY (customer_id) REFERENCES customer(id);
+INSERT INTO customer (fullname,birthday,phone,email,point)
+VALUES 
+(N'Nguyễn Văn A','1990-05-10','0901234567','a@gmail.com',100),
+(N'Trần Thị B','1995-02-14','0902345678','b@gmail.com',200),
+(N'Lê Văn C','1988-09-22','0903456789','c@gmail.com',150),
+(N'Phạm Thị D','1992-11-05','0904567890','d@gmail.com',300),
+(N'Đỗ Văn E','2000-01-01','0905678901','e@gmail.com',50);
+
+-- places
+INSERT INTO places (name,address)
+VALUES 
+(N'Hạ Long','Quảng Ninh'),
+(N'Đà Nẵng','Đà Nẵng'),
+(N'Sapa','Lào Cai'),
+(N'Phú Quốc','Kiên Giang'),
+(N'Nha Trang','Khánh Hòa');
+
+-- tour
+INSERT INTO tour (places_id,start_date,end_date,price)
+VALUES 
+(1,'2025-10-01','2025-10-05',5000000),
+(2,'2025-11-10','2025-11-15',6000000),
+(3,'2025-12-20','2025-12-25',4500000),
+(4,'2026-01-05','2026-01-10',7000000),
+(5,'2026-02-15','2026-02-20',5500000);
+
+-- booking
+INSERT INTO booking (tour_id,customer_id,booking_date)
+VALUES
+(1,1,'2025-09-20'),
+(2,2,'2025-09-21'),
+(3,3,'2025-09-22'),
+(1,4,'2025-09-23'),
+(5,5,'2025-09-24');
+UPDATE customer
+SET point = 500
+WHERE id = 1;
+UPDATE places
+SET address = N'Hạ Long Bay - Quảng Ninh'
+WHERE id = 1;
+DELETE FROM booking
+WHERE id = 5;  -- xóa booking có id=5
+--5. Truy vấn dữ liệu (SELECT)
+--Liệt kê danh sách tất cả khách hàng kèm tổng số tour đã đặt.
+SELECT c.id, c.fullname, COUNT(b.id) AS TotalBooking
+FROM customer c
+LEFT JOIN booking b ON c.id = b.customer_id
+GROUP BY c.id, c.fullname;
+--Liệt kê thông tin các tour kèm tên địa điểm du lịch.
+SELECT t.id, t.start_date, t.end_date, t.price, p.name AS PlaceName
+FROM tour t
+JOIN places p ON t.places_id = p.id;
+--Tìm tất cả booking theo tour_id.
+DECLARE @tour_id INT = 1;
+SELECT * FROM booking
+WHERE tour_id = @tour_id;
+--6. Thủ tục lưu trữ (Stored Procedure)
+--Viết procedure: Xem danh sách khách hàng tham gia một tour theo tour_id.
+CREATE PROCEDURE GetCustomersByTour
+    @tour_id INT
+AS
+BEGIN
+    SELECT c.id, c.fullname, c.phone, c.email
+    FROM customer c
+    JOIN booking b ON c.id = b.customer_id
+    WHERE b.tour_id = @tour_id;
+END;
+GO
+EXEC GetCustomersByTour @tour_id = 1;
+--7. View
+--Tạo view: Thống kê doanh thu theo từng tour (số khách và tổng tiền thu được).
+CREATE VIEW vw_RevenueByTour
+AS
+SELECT 
+    t.id AS TourID,
+    COUNT(b.id) AS NumberOfCustomers,
+    SUM(t.price) AS TotalRevenue
+FROM tour t
+LEFT JOIN booking b ON t.id = b.tour_id
+GROUP BY t.id;
+SELECT * FROM vw_RevenueByTour;
+--8. Trigger
+
+--Trigger ngăn không cho xóa khách hàng.
+CREATE TRIGGER trg_PreventDeleteCustomer
+ON customer
+INSTEAD OF DELETE
+AS
+BEGIN
+    RAISERROR(N'Không được xóa khách hàng',16,1);
+    ROLLBACK TRANSACTION;
+END;
+GO
+--Trigger ngăn không cho sửa giá tiền (price) của tour.
+CREATE TRIGGER trg_PreventUpdateTourPrice
+ON tour
+FOR UPDATE
+AS
+BEGIN
+    IF UPDATE(price)
+    BEGIN
+        RAISERROR(N'Không được phép sửa giá tour',16,1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
