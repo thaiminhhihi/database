@@ -1,0 +1,248 @@
+-- T?o các b?ng
+CREATE TABLE Category (
+    id INT IDENTITY(1,1),
+    name VARCHAR(100),
+    description VARCHAR(255)
+);
+
+CREATE TABLE Product (
+    id INT IDENTITY(1,1),
+    category_id INT,
+    name VARCHAR(100),
+    price FLOAT,
+    stock INT
+);
+
+CREATE TABLE Orders (
+    id INT IDENTITY(1,1),
+    order_date DATE,
+    customer_name VARCHAR(100),
+    customer_phone VARCHAR(20)
+);
+
+CREATE TABLE OrderDetail (
+    id INT IDENTITY(1,1),
+    order_id INT,
+    product_id INT,
+    quantity INT,
+    unit_price FLOAT
+);
+
+CREATE TABLE Feedback (
+    id INT IDENTITY(1,1),
+    order_id INT,
+    content VARCHAR(255),
+    rating INT
+);
+
+-- Thêm khóa chính
+ALTER TABLE Category ADD CONSTRAINT PK_Category PRIMARY KEY (id);
+ALTER TABLE Product ADD CONSTRAINT PK_Product PRIMARY KEY (id);
+ALTER TABLE Orders ADD CONSTRAINT PK_Orders PRIMARY KEY (id);
+ALTER TABLE OrderDetail ADD CONSTRAINT PK_OrderDetail PRIMARY KEY (id);
+ALTER TABLE Feedback ADD CONSTRAINT PK_Feedback PRIMARY KEY (id);
+
+-- Thêm khóa ngo?i
+ALTER TABLE Product 
+ADD CONSTRAINT FK_Product_Category 
+FOREIGN KEY (category_id) REFERENCES Category(id);
+
+ALTER TABLE OrderDetail 
+ADD CONSTRAINT FK_OrderDetail_Orders 
+FOREIGN KEY (order_id) REFERENCES Orders(id);
+
+ALTER TABLE OrderDetail 
+ADD CONSTRAINT FK_OrderDetail_Product 
+FOREIGN KEY (product_id) REFERENCES Product(id);
+
+ALTER TABLE Feedback 
+ADD CONSTRAINT FK_Feedback_Orders 
+FOREIGN KEY (order_id) REFERENCES Orders(id);
+
+-- T?o index
+CREATE INDEX IX_Product_Name ON Product(name);
+
+-- D? li?u m?u
+INSERT INTO Category(name, description) VALUES
+('Ði?n tho?i', 'Các lo?i di?n tho?i'),
+('Laptop', 'Máy tính xách tay'),
+('Ph? ki?n', 'Tai nghe, s?c...'),
+('Tablet', 'Máy tính b?ng'),
+('Ð?ng h?', 'Smartwatch');
+
+INSERT INTO Product(category_id, name, price, stock) VALUES
+(1, 'iPhone 14', 25000000, 50),
+(2, 'Dell XPS 13', 30000000, 20),
+(3, 'Tai nghe AirPods', 4000000, 100),
+(4, 'iPad Pro', 20000000, 30),
+(5, 'Apple Watch', 10000000, 40);
+
+INSERT INTO Orders(order_date, customer_name, customer_phone) VALUES
+('2025-09-01', 'Nguyen Van A', '0901111111'),
+('2025-09-02', 'Tran Thi B', '0902222222'),
+('2025-09-03', 'Le Van C', '0903333333'),
+('2025-09-04', 'Pham Thi D', '0904444444'),
+('2025-09-05', 'Do Van E', '0905555555');
+
+INSERT INTO OrderDetail(order_id, product_id, quantity, unit_price) VALUES
+(1, 1, 1, 25000000),
+(1, 3, 2, 4000000),
+(2, 2, 1, 30000000),
+(3, 4, 1, 20000000),
+(4, 5, 2, 10000000);
+
+INSERT INTO Feedback(order_id, content, rating) VALUES
+(1, 'Hàng ch?t lu?ng', 5),
+(2, 'Giao hàng nhanh', 4),
+(3, 'Ðóng gói t?t', 4),
+(4, 'Chua hài lòng', 3),
+(5, 'R?t hài lòng', 5);
+
+-- Update m?u
+UPDATE Product
+SET price = price * 1.05 
+WHERE id =1;
+
+UPDATE Orders
+SET customer_name = N'okokok'
+WHERE id =1;
+
+-- Delete m?u
+DELETE FROM OrderDetail
+WHERE id = 5;
+
+-- SELECT m?u
+SELECT p.id, p.name AS ProductName, c.name AS CategoryName, p.price, p.stock
+FROM Product p
+JOIN Category c ON p.category_id = c.id;
+
+-- Li?t kê Category
+SELECT * FROM Category;
+
+-- Li?t kê Product
+SELECT * FROM Product;
+
+-- Li?t kê Orders
+SELECT * FROM Orders;
+
+-- Li?t kê OrderDetail
+SELECT * FROM OrderDetail;
+SELECT * 
+FROM Feedback;
+-- 2. Tính t?ng s? lu?ng và t?ng ti?n c?a m?i don hàng
+SELECT o.id AS OrderID,
+       SUM(od.quantity) AS TotalQuantity,
+       SUM(od.quantity * od.unit_price) AS TotalAmount
+FROM Orders o
+JOIN OrderDetail od ON o.id = od.order_id
+GROUP BY o.id;
+-- 3. Li?t kê t?t c? don hàng có rating = 4
+SELECT o.*,f.rating
+FROM Orders o
+JOIN Feedback f ON o.id = f.order_id
+WHERE f.rating >= 4;
+--Tìm top 3 s?n ph?m bán ch?y nh?t.
+SELECT TOP 3 p.name,p.id,
+       SUM(od.quantity) AS TotalSold
+FROM Product p
+JOIN OrderDetail od ON p.id = od.product_id
+group by p.name,p.id
+order by SUM(od.quantity) desc
+--F. VIEW
+--T?o View hi?n th? doanh thu chi ti?t:
+CREATE VIEW vw_OrderRevenue AS
+SELECT 
+    o.id AS order_id,
+    o.customer_name,
+    SUM(od.quantity) AS total_products,
+    SUM(od.quantity * od.unit_price) AS total_amount
+FROM Orders o
+JOIN OrderDetail od ON o.id = od.order_id
+GROUP BY o.id, o.customer_name;
+--order_id, customer_name, t?ng s? s?n ph?m, t?ng ti?n.
+
+--G. Stored Procedure
+--Vi?t procedure d?:
+
+--Tìm t?t c? s?n ph?m theo category_id.
+    create proc sp_GetProductsByCategory
+    @category_id int
+    as
+    begin
+    select *
+    from product
+    where category_id = @category_id 
+    end
+
+
+--Tìm thông tin chi ti?t don hàng theo order_id.
+alter proc  sp_GetOrderDetailByOrder
+@order_id int
+as
+begin
+select * from
+OrderDetail
+where order_id = @order_id
+end
+EXEC sp_GetOrderDetailByOrder @order_id = 1;
+--H. Trigger
+--AFTER INSERT: Khi thêm chi ti?t don hàng ? gi?m s? lu?ng t?n kho c?a s?n ph?m.
+CREATE TRIGGER trg_AfterInsert_OrderDetail on OrderDetail
+after insert 
+as
+begin
+update Product
+set Stock = Stock - i.quantity
+from product p 
+join inserted i on p.id = i.product_id
+end
+-- Li?t kê Orders\
+SELECT * FROM Product;
+SELECT * FROM Orders;
+
+-- Li?t kê OrderDetail
+SELECT * FROM OrderDetail;
+--AFTER UPDATE: N?u c?p nh?t s? lu?ng trong chi ti?t don hàng ? c?p nh?t l?i t?n kho.
+CREATE TRIGGER trg_AfterUpdate_OrderDetail
+ON OrderDetail
+AFTER UPDATE
+AS
+BEGIN
+    UPDATE p
+    SET p.stock = p.stock + d.quantity - i.quantity
+    FROM Product p
+    JOIN deleted d ON p.id = d.product_id
+    JOIN inserted i ON p.id = i.product_id;
+END;
+
+--AFTER DELETE: N?u xóa chi ti?t don hàng ? hoàn l?i s? lu?ng t?n kho cho s?n ph?m.
+CREATE TRIGGER trg_AfterDelete_OrderDetail
+ON OrderDetail
+AFTER DELETE
+AS
+BEGIN
+    UPDATE Product
+    SET stock = stock + d.quantity
+    FROM Product p
+    JOIN deleted d ON p.id = d.product_id;
+END;
+
+--INSTEAD OF DELETE trên b?ng Orders: Khi xóa don hàng thì không xóa th?t, mà ch? ghi log vào b?ng Orders_Log (c?n t?o b?ng log g?m order_id, deleted_date, reason).
+-- Tạo bảng log
+CREATE TABLE Orders_Log (
+    log_id INT IDENTITY(1,1) PRIMARY KEY,
+    order_id INT,
+    deleted_date DATETIME,
+    reason VARCHAR(255)
+);
+
+CREATE TRIGGER trg_InsteadDelete_Orders
+ON Orders
+INSTEAD OF DELETE
+AS
+BEGIN
+    INSERT INTO Orders_Log(order_id, deleted_date, reason)
+    SELECT d.id, GETDATE(), 'Deleted by trigger'
+    FROM deleted d;
+    -- Không xóa bản ghi gốc
+END;
